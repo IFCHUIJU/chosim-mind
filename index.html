@@ -168,54 +168,51 @@
       box-shadow: 0 10px 20px rgba(0,0,0,0.25) !important;
     }
 
-/* 🙋‍♂️ 대기자 박스 - 무거운 터치 제한을 없애서 스크롤 속도 최적화 */
-    #queueBox {
-      height: 320px; 
-      overflow-y: auto; 
-      background: #f0f4ef; 
-      padding: 8px; 
-      border-radius: 12px; 
-      border: 1.5px solid var(--border); 
-      display: flex; 
-      flex-direction: column; 
-      gap: 5px; 
-      -webkit-overflow-scrolling: touch; 
-      scrollbar-width: thin;
-      scrollbar-color: var(--accent) #e3ede2;
-    }
+/* 🙋‍♂️ 대기자 박스 - 스크롤 막힘 방지 최적화 */
+#queueBox {
+  height: 300px; /* 카드가 살짝 잘려 보이게 높이 조정해 스크롤 존재 유무 직관화 */
+  overflow-y: auto; 
+  background: #f0f4ef; 
+  padding: 8px; 
+  border-radius: 12px; 
+  border: 1.5px solid var(--border); 
+  display: flex; 
+  flex-direction: column; 
+  gap: 5px; 
+  touch-action: auto !important; /* 스크롤이 먹통 되지 않게 터치 동작 허용 */
+  -webkit-overflow-scrolling: touch; 
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) #e3ede2;
+}
 
-    /* 🎨 웹킷 브라우저 스크롤바 디자인 */
-    #queueBox::-webkit-scrollbar {
-      width: 8px !important;
-      display: block !important;
-    }
+/* 🎨 웹킷 브라우저 스크롤바 디자인 */
+#queueBox::-webkit-scrollbar {
+  width: 8px !important;
+  display: block !important;
+}
 
-    #queueBox::-webkit-scrollbar-track {
-      background: #e3ede2 !important;
-      border-radius: 10px;
-    }
+#queueBox::-webkit-scrollbar-track {
+  background: #e3ede2 !important;
+  border-radius: 10px;
+}
 
-    #queueBox::-webkit-scrollbar-thumb {
-      background: var(--accent) !important;
-      border-radius: 10px;
-      border: 1.5px solid #e3ede2;
-    }
+#queueBox::-webkit-scrollbar-thumb {
+  background: var(--accent) !important;
+  border-radius: 10px;
+  border: 1.5px solid #e3ede2;
+}
 
-    #queueBox::-webkit-scrollbar-thumb:hover {
-      background: var(--primary) !important;
-    }
-
-    /* 🖐️ 드래그 전용 손잡이 스타일 (추가됨) */
-    .drag-handle {
-      display: inline-block;
-      margin-left: 8px;
-      padding: 2px 6px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
-      font-size: 0.85rem;
-      cursor: grab;
-      touch-action: none; /* 손잡이에서만 드래그 전용 동작 처리 */
-    }
+/* 🖐️ 드래그 전용 손잡이 (손잡이 잡을 때만 스크롤 방지) */
+.drag-handle {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: grab;
+  touch-action: none !important; /* 손잡이 영역에서만 드래그 구동 */
+}
     
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     th, td { padding: 10px 4px; text-align: center; border-bottom: 1px solid var(--border-soft); }
@@ -385,11 +382,11 @@
           </div>
         </div>
 
-        <!-- [오른쪽 열] 대기자 목록 -->
-        <div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)" style="padding:8px; margin-bottom:0; position:sticky; top:10px;">
-          <h3 style="margin: 0 0 6px 0; font-size: 0.85rem; color:var(--primary);">🙋‍♂️ 대기자</h3>
-          <div id="queueBox"></div>
-        </div>
+<!-- [오른쪽 열] 대기자 목록 -->
+<div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)" style="padding:8px; margin-bottom:0; position:sticky; top:10px;">
+  <h3 style="margin: 0 0 6px 0; font-size: 0.85rem; color:var(--primary);">🙋‍♂️ 대기자 <span style="font-size:0.7rem; font-weight:normal; color:#666;">(↕ 스크롤)</span></h3>
+  <div id="queueBox"></div>
+</div>
 
       </div>
     </div>
@@ -804,54 +801,57 @@ function renderQueueAndCourts() {
       moveMemberToZone(Number(data.itemId), data.fromZone, 'queue');
     }
 
-/* 📱 경량화된 모바일 터치 엔진 */
-    let touchedEl = null;
-    let touchClone = null;
+/* 📱 안정화된 모바일 터치 엔진 */
+let touchedEl = null;
+let touchClone = null;
 
-    function touchStart(e, itemId, fromZone) {
-      if (!currentUser || !currentUser.isAdmin) return;
-      
-      // 손잡이 아이콘을 감싸고 있는 카드를 복사
-      touchedEl = e.currentTarget.closest('.draggable-item');
-      if (!touchedEl) return;
+function touchStart(e, itemId, fromZone) {
+  if (!currentUser || !currentUser.isAdmin) return;
+  
+  touchedEl = e.currentTarget.closest('.draggable-item');
+  if (!touchedEl) return;
 
-      const touch = e.touches[0];
-      touchClone = touchedEl.cloneNode(true);
-      touchClone.classList.add('dragging-touch');
-      document.body.appendChild(touchClone);
-      
-      updateClonePosition(touch);
-    }
+  const touch = e.touches[0];
+  touchClone = touchedEl.cloneNode(true);
+  touchClone.classList.add('dragging-touch');
+  document.body.appendChild(touchClone);
+  
+  updateClonePosition(touch);
+}
 
-    function touchMove(e) {
-      if (!touchClone) return;
-      e.preventDefault(); 
-      const touch = e.touches[0];
-      updateClonePosition(touch);
+function touchMove(e) {
+  // 🛑 클론(드래그 중인 카드)이 없으면 화면 스크롤이 정상 작동하게 둠!
+  if (!touchClone) return;
 
-      const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
-      document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
-      if (targetZone) {
-        const cardEl = document.querySelector(`[data-zone="${targetZone}"]`);
-        if (cardEl) cardEl.classList.add('drag-over');
-      }
-    }
+  // 손잡이를 쥐고 카드를 이동시킬 때만 스크롤 차단
+  if (e.cancelable) e.preventDefault(); 
+  
+  const touch = e.touches[0];
+  updateClonePosition(touch);
 
-    function touchEnd(e, itemId, fromZone) {
-      if (!touchClone) return;
-      
-      const touch = e.changedTouches[0];
-      const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
+  const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
+  document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
+  if (targetZone) {
+    const cardEl = document.querySelector(`[data-zone="${targetZone}"]`);
+    if (cardEl) cardEl.classList.add('drag-over');
+  }
+}
 
-      document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
-      touchClone.remove();
-      touchClone = null;
-      touchedEl = null;
+function touchEnd(e, itemId, fromZone) {
+  if (!touchClone) return;
+  
+  const touch = e.changedTouches[0];
+  const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
 
-      if (targetZone && targetZone !== fromZone) {
-        moveMemberToZone(Number(itemId), fromZone, targetZone);
-      }
-    }
+  document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
+  touchClone.remove();
+  touchClone = null;
+  touchedEl = null;
+
+  if (targetZone && targetZone !== fromZone) {
+    moveMemberToZone(Number(itemId), fromZone, targetZone);
+  }
+}
 
     function updateClonePosition(touch) {
       if (touchClone) {
