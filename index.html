@@ -28,8 +28,9 @@
       --border: #cee0cc;
       --border-soft: #e3ede2;
     }
-    * { box-sizing: border-box; touch-action: manipulation; }
+* { box-sizing: border-box; }
     body { font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
+    #queueBox { touch-action: pan-y !important; -webkit-overflow-scrolling: touch; }
     
     /* Landing Screen */
     #landingScreen {
@@ -200,18 +201,6 @@
   background: var(--accent) !important;
   border-radius: 10px;
   border: 1.5px solid #e3ede2;
-}
-
-/* 🖐️ 드래그 전용 손잡이 (손잡이 잡을 때만 스크롤 방지) */
-.drag-handle {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 4px 8px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: grab;
-  touch-action: none !important; /* 손잡이 영역에서만 드래그 구동 */
 }
     
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -732,47 +721,41 @@ function formatMemberLabel(item) {
     }
 
 function renderQueueAndCourts() {
-      const isAdmin = currentUser && currentUser.isAdmin;
-      const queueBox = document.getElementById('queueBox');
-      
-      queueBox.innerHTML = queue.map(item => `
-        <div class="draggable-item" 
-             style="justify-content: space-between; padding: 6px 10px;"
-             data-id="${item.id}"
-             data-from="queue">
-          <span>${formatMemberLabel(item)}</span>
-          ${isAdmin ? `<span class="drag-handle" 
-                             ontouchstart="touchStart(event, ${item.id}, 'queue')"
-                             ontouchmove="touchMove(event)"
-                             ontouchend="touchEnd(event, ${item.id}, 'queue')">⠿</span>` : ''}
-        </div>
-      `).join('') || '<span style="color:#788c7b; font-size:0.8rem; width:100%; text-align:center; padding:15px 0;">출석 처리된 회원이 없습니다.</span>';
+  const isAdmin = currentUser && currentUser.isAdmin;
+  const queueBox = document.getElementById('queueBox');
+  
+  // 🙋‍♂️ 대기자 목록 (아이콘 표시 제거)
+  queueBox.innerHTML = queue.map(item => `
+    <div class="draggable-item" 
+         style="justify-content: center; padding: 8px 10px;"
+         data-id="${item.id}"
+         data-from="queue">
+      <span>${formatMemberLabel(item)}</span>
+    </div>
+  `).join('') || '<span style="color:#788c7b; font-size:0.8rem; width:100%; text-align:center; padding:15px 0;">출석 처리된 회원이 없습니다.</span>';
 
-      for (let key in courtSlots) {
-        const slotEl = document.getElementById(`slot-${key}`);
-        const list = courtSlots[key] || [];
-        
-        slotEl.innerHTML = [0, 1, 2, 3].map(idx => {
-          const item = list[idx];
-          if (item) {
-            return `
-              <div class="draggable-item" 
-                   style="background:#3a5c41; border-color:#1e3d24; justify-content: space-between; padding: 4px 6px;" 
-                   data-id="${item.id}"
-                   data-from="${key}">
-                <span style="font-size:0.75rem;">${formatMemberLabel(item)}</span>
-                ${isAdmin ? `<span class="drag-handle" 
-                                   ontouchstart="touchStart(event, ${item.id}, '${key}')"
-                                   ontouchmove="touchMove(event)"
-                                   ontouchend="touchEnd(event, ${item.id}, '${key}')">⠿</span>` : ''}
-              </div>
-            `;
-          } else {
-            return `<div style="border:1.5px dashed #c1d1c3; border-radius:10px; height:38px; display:flex; align-items:center; justify-content:center; color:#889e8a; font-size:0.75rem; background:#fafcf9;">빈 슬롯</div>`;
-          }
-        }).join('');
+  // 🏟️ 코트 및 대기 매치 (아이콘 표시 제거)
+  for (let key in courtSlots) {
+    const slotEl = document.getElementById(`slot-${key}`);
+    const list = courtSlots[key] || [];
+    
+    slotEl.innerHTML = [0, 1, 2, 3].map(idx => {
+      const item = list[idx];
+      if (item) {
+        return `
+          <div class="draggable-item" 
+               style="background:#3a5c41; border-color:#1e3d24; justify-content: center; padding: 6px 8px;" 
+               data-id="${item.id}"
+               data-from="${key}">
+            <span style="font-size:0.75rem;">${formatMemberLabel(item)}</span>
+          </div>
+        `;
+      } else {
+        return `<div style="border:1.5px dashed #c1d1c3; border-radius:10px; height:38px; display:flex; align-items:center; justify-content:center; color:#889e8a; font-size:0.75rem; background:#fafcf9;">빈 슬롯</div>`;
       }
-    }
+    }).join('');
+  }
+}
 
     /* 🖥️ PC 드래그 & 드롭 Engine */
     function allowDrop(ev) { if (currentUser && currentUser.isAdmin) ev.preventDefault(); }
@@ -801,63 +784,79 @@ function renderQueueAndCourts() {
       moveMemberToZone(Number(data.itemId), data.fromZone, 'queue');
     }
 
-/* 📱 스크롤 끊김/텀 현상 완벽 해결된 터치 엔진 */
+/* 📱 렉 및 프레임 드랍 제로 터치 엔진 */
 let touchedEl = null;
 let touchClone = null;
-let dragTimer = null; // 드래그 시작 딜레이 타이머 추가
+let startX = 0;
+let startY = 0;
+let isDragging = false;
 
 function touchStart(e, itemId, fromZone) {
   if (!currentUser || !currentUser.isAdmin) return;
   
-  const targetEl = e.currentTarget.closest('.draggable-item');
-  if (!targetEl) return;
-
   const touch = e.touches[0];
-  touchedEl = targetEl;
-
-  // ⏱️ 손잡이를 0.12초 이상 꾹 누르고 있을 때만 드래그 시작!
-  dragTimer = setTimeout(() => {
-    touchClone = touchedEl.cloneNode(true);
-    touchClone.classList.add('dragging-touch');
-    document.body.appendChild(touchClone);
-    updateClonePosition(touch);
-  }, 120);
+  startX = touch.clientX;
+  startY = touch.clientY;
+  isDragging = false;
+  
+  touchedEl = e.currentTarget.closest('.draggable-item');
 }
 
 function touchMove(e) {
-  // 슥슥 올릴 때는 dragTimer를 즉시 취소하여 부드러운 스크롤 실행
-  if (!touchClone) {
-    if (dragTimer) {
-      clearTimeout(dragTimer);
-      dragTimer = null;
-    }
-    return;
-  }
-
-  // 진짜 꾹 눌러서 드래그 상태가 된 경우에만 스크롤 차단
-  if (e.cancelable) e.preventDefault(); 
+  if (!touchedEl) return;
   
   const touch = e.touches[0];
-  updateClonePosition(touch);
+  const moveX = Math.abs(touch.clientX - startX);
+  const moveY = Math.abs(touch.clientY - startY);
 
-  const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
-  document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
-  if (targetZone) {
-    const cardEl = document.querySelector(`[data-zone="${targetZone}"]`);
-    if (cardEl) cardEl.classList.add('drag-over');
+  // 1. 아직 드래그 상태가 아닌데 손가락이 위아래로 움직이면 즉시 드래그 포기 (부드러운 스크롤 보장)
+  if (!isDragging) {
+    if (moveY > 5 && moveY > moveX) {
+      touchedEl = null; // 터치 추적 해제 -> 브라우저 기본 네이티브 스크롤로 구동
+      return;
+    }
+    
+    // 옆으로 끌거나 꾹 눌러 일정 이상 움직였을 때 드래그 시작
+    if (moveX > 8 || moveY > 8) {
+      isDragging = true;
+      touchClone = touchedEl.cloneNode(true);
+      touchClone.classList.add('dragging-touch');
+      document.body.appendChild(touchClone);
+    }
+  }
+
+  // 2. 드래그 중일 때만 스크롤을 막고 위치 업데이트
+  if (isDragging && touchClone) {
+    if (e.cancelable) e.preventDefault();
+    updateClonePosition(touch);
+
+    const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
+    document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
+    if (targetZone) {
+      const cardEl = document.querySelector(`[data-zone="${targetZone}"]`);
+      if (cardEl) cardEl.classList.add('drag-over');
+    }
   }
 }
 
 function touchEnd(e, itemId, fromZone) {
-  if (dragTimer) {
-    clearTimeout(dragTimer);
-    dragTimer = null;
+  if (isDragging && touchClone) {
+    const touch = e.changedTouches[0];
+    const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
+
+    document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
+    touchClone.remove();
+
+    if (targetZone && targetZone !== fromZone) {
+      moveMemberToZone(Number(itemId), fromZone, targetZone);
+    }
   }
 
-  if (!touchClone) {
-    touchedEl = null;
-    return;
-  }
+  // 변수 초기화
+  touchClone = null;
+  touchedEl = null;
+  isDragging = false;
+}
   
   const touch = e.changedTouches[0];
   const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
