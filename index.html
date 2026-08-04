@@ -168,10 +168,10 @@
       box-shadow: 0 10px 20px rgba(0,0,0,0.25) !important;
     }
 
-/* 🙋‍♂️ 대기자 박스 & 스크롤바 설정 (수정됨) */
-#queueBox {
-      height: 320px;                  /* 고정 높이 */
-      overflow-y: scroll;             /* 항상 세로 스크롤 영역 활성화 */
+/* 🙋‍♂️ 대기자 박스 - 무거운 터치 제한을 없애서 스크롤 속도 최적화 */
+    #queueBox {
+      height: 320px; 
+      overflow-y: auto; 
       background: #f0f4ef; 
       padding: 8px; 
       border-radius: 12px; 
@@ -179,37 +179,42 @@
       display: flex; 
       flex-direction: column; 
       gap: 5px; 
-      align-content: stretch;
-      
-      /* ✨ 스크롤 동작 시 드래그 엉킴 방지 */
-      touch-action: pan-y !important; 
-      
-      /* 모바일 터치 스크롤 최적화 */
       -webkit-overflow-scrolling: touch; 
-      /* 파이어폭스 전용 커스텀 스크롤바 */
       scrollbar-width: thin;
       scrollbar-color: var(--accent) #e3ede2;
     }
 
-    /* 🎨 웹킷 브라우저(크롬, 사파리, 웨일, 모바일 웹 등) 스크롤바 강제 표시 */
+    /* 🎨 웹킷 브라우저 스크롤바 디자인 */
     #queueBox::-webkit-scrollbar {
-      width: 8px !important;            /* 스크롤바 두께를 조금 더 두껍게 조절 */
+      width: 8px !important;
       display: block !important;
     }
 
     #queueBox::-webkit-scrollbar-track {
-      background: #e3ede2 !important;   /* 연한 녹색 트랙 배경 */
+      background: #e3ede2 !important;
       border-radius: 10px;
     }
 
     #queueBox::-webkit-scrollbar-thumb {
-      background: var(--accent) !important; /* 포인트 그린 바 */
+      background: var(--accent) !important;
       border-radius: 10px;
       border: 1.5px solid #e3ede2;
     }
 
     #queueBox::-webkit-scrollbar-thumb:hover {
       background: var(--primary) !important;
+    }
+
+    /* 🖐️ 드래그 전용 손잡이 스타일 (추가됨) */
+    .drag-handle {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 6px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      font-size: 0.85rem;
+      cursor: grab;
+      touch-action: none; /* 손잡이에서만 드래그 전용 동작 처리 */
     }
     
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -729,20 +734,20 @@ function formatMemberLabel(item) {
       return `${item.name} (${roleTag}${item.level})`;
     }
 
-    function renderQueueAndCourts() {
+function renderQueueAndCourts() {
       const isAdmin = currentUser && currentUser.isAdmin;
       const queueBox = document.getElementById('queueBox');
       
       queueBox.innerHTML = queue.map(item => `
         <div class="draggable-item" 
-             draggable="${isAdmin}" 
+             style="justify-content: space-between; padding: 6px 10px;"
              data-id="${item.id}"
-             data-from="queue"
-             ondragstart="dragStart(event, ${item.id}, 'queue')"
-             ontouchstart="touchStart(event, ${item.id}, 'queue')"
-             ontouchmove="touchMove(event)"
-             ontouchend="touchEnd(event, ${item.id}, 'queue')">
+             data-from="queue">
           <span>${formatMemberLabel(item)}</span>
+          ${isAdmin ? `<span class="drag-handle" 
+                             ontouchstart="touchStart(event, ${item.id}, 'queue')"
+                             ontouchmove="touchMove(event)"
+                             ontouchend="touchEnd(event, ${item.id}, 'queue')">⠿</span>` : ''}
         </div>
       `).join('') || '<span style="color:#788c7b; font-size:0.8rem; width:100%; text-align:center; padding:15px 0;">출석 처리된 회원이 없습니다.</span>';
 
@@ -755,15 +760,14 @@ function formatMemberLabel(item) {
           if (item) {
             return `
               <div class="draggable-item" 
-                   style="background:#3a5c41; border-color:#1e3d24;" 
-                   draggable="${isAdmin}" 
+                   style="background:#3a5c41; border-color:#1e3d24; justify-content: space-between; padding: 4px 6px;" 
                    data-id="${item.id}"
-                   data-from="${key}"
-                   ondragstart="dragStart(event, ${item.id}, '${key}')"
-                   ontouchstart="touchStart(event, ${item.id}, '${key}')"
-                   ontouchmove="touchMove(event)"
-                   ontouchend="touchEnd(event, ${item.id}, '${key}')">
-                <span>${formatMemberLabel(item)}</span>
+                   data-from="${key}">
+                <span style="font-size:0.75rem;">${formatMemberLabel(item)}</span>
+                ${isAdmin ? `<span class="drag-handle" 
+                                   ontouchstart="touchStart(event, ${item.id}, '${key}')"
+                                   ontouchmove="touchMove(event)"
+                                   ontouchend="touchEnd(event, ${item.id}, '${key}')">⠿</span>` : ''}
               </div>
             `;
           } else {
@@ -800,35 +804,28 @@ function formatMemberLabel(item) {
       moveMemberToZone(Number(data.itemId), data.fromZone, 'queue');
     }
 
-/* 📱 모바일 터치 드래그 & 드롭 Engine (스크롤 충돌 방지 보완) */
+/* 📱 경량화된 모바일 터치 엔진 */
     let touchedEl = null;
     let touchClone = null;
-    let touchTimer = null; // ✨ 롱터치 딜레이 타이머 추가
 
     function touchStart(e, itemId, fromZone) {
       if (!currentUser || !currentUser.isAdmin) return;
       
-      const touch = e.touches[0];
-      const targetEl = e.currentTarget;
+      // 손잡이 아이콘을 감싸고 있는 카드를 복사
+      touchedEl = e.currentTarget.closest('.draggable-item');
+      if (!touchedEl) return;
 
-      // 🛑 바로 드래그하지 않고 150ms 동안 꾹 누를 때만 드래그 동작 실행
-      touchTimer = setTimeout(() => {
-        touchedEl = targetEl;
-        touchClone = touchedEl.cloneNode(true);
-        touchClone.classList.add('dragging-touch');
-        document.body.appendChild(touchClone);
-        updateClonePosition(touch);
-      }, 150); 
+      const touch = e.touches[0];
+      touchClone = touchedEl.cloneNode(true);
+      touchClone.classList.add('dragging-touch');
+      document.body.appendChild(touchClone);
+      
+      updateClonePosition(touch);
     }
 
     function touchMove(e) {
-      // 150ms 이전에 손가락을 움직이면 "스크롤"로 판단하고 드래그 취소!
-      if (!touchClone) {
-        clearTimeout(touchTimer);
-        return; 
-      }
-
-      e.preventDefault(); // 드래그 중일 때만 화면 스크롤 막기
+      if (!touchClone) return;
+      e.preventDefault(); 
       const touch = e.touches[0];
       updateClonePosition(touch);
 
@@ -841,9 +838,6 @@ function formatMemberLabel(item) {
     }
 
     function touchEnd(e, itemId, fromZone) {
-      // 딜레이 타이머 해제
-      clearTimeout(touchTimer);
-
       if (!touchClone) return;
       
       const touch = e.changedTouches[0];
