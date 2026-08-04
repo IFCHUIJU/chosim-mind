@@ -30,7 +30,6 @@
     }
     * { box-sizing: border-box; }
     body { font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
-    #queueBox { touch-action: pan-y !important; -webkit-overflow-scrolling: touch; }
     
     /* Landing Screen */
     #landingScreen {
@@ -112,10 +111,10 @@
     .btn-edit { background: #e09f3e; color: white; }
     .btn-disabled { background: #e5ebe4 !important; color: #9bb09e !important; cursor: not-allowed !important; }
     
-   /* Board Layout (Option 2: 2열 분할 레이아웃) */
+    /* Board Layout */
     .board-container { 
       display: grid;
-      grid-template-columns: 1.2fr 1fr; /* 좌:우 비율 (코트:대기자) */
+      grid-template-columns: 1.2fr 1fr;
       gap: 10px; 
       align-items: start;
     }
@@ -157,7 +156,7 @@
       text-align: center; 
       font-weight: 700; 
       box-shadow: 0 2px 4px rgba(0,0,0,0.12);
-      touch-action: none;
+      touch-action: pan-y; /* 💡 세로 스크롤 허용 최적화 */
       word-break: keep-all;
     }
     .draggable-item.dragging-touch {
@@ -169,40 +168,21 @@
       box-shadow: 0 10px 20px rgba(0,0,0,0.25) !important;
     }
 
-/* 🙋‍♂️ 대기자 박스 - 스크롤 막힘 방지 최적화 */
-#queueBox {
-  height: 300px;
-  overflow-y: auto; 
-  background: #f0f4ef; 
-  padding: 8px; 
-  border-radius: 12px; 
-  border: 1.5px solid var(--border); 
-  display: flex; 
-  flex-direction: column; 
-  gap: 5px; 
-  touch-action: auto !important;
-  -webkit-overflow-scrolling: touch; 
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) #e3ede2;
-}
+    /* 🙋‍♂️ 대기자 박스 - 스크롤 최적화 */
+    #queueBox {
+      height: 320px;
+      overflow-y: auto; 
+      background: #f0f4ef; 
+      padding: 8px; 
+      border-radius: 12px; 
+      border: 1.5px solid var(--border); 
+      display: flex; 
+      flex-direction: column; 
+      gap: 5px; 
+      touch-action: pan-y !important; /* 💡 순수 위아래 스크롤 허용 */
+      -webkit-overflow-scrolling: touch; 
+    }
 
-/* 🎨 웹킷 브라우저 스크롤바 디자인 */
-#queueBox::-webkit-scrollbar {
-  width: 8px !important;
-  display: block !important;
-}
-
-#queueBox::-webkit-scrollbar-track {
-  background: #e3ede2 !important;
-  border-radius: 10px;
-}
-
-#queueBox::-webkit-scrollbar-thumb {
-  background: var(--accent) !important;
-  border-radius: 10px;
-  border: 1.5px solid #e3ede2;
-}
-    
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     th, td { padding: 10px 4px; text-align: center; border-bottom: 1px solid var(--border-soft); }
     th { background: var(--primary-light); color: var(--primary); font-weight: 700; }
@@ -373,7 +353,7 @@
 
         <!-- [오른쪽 열] 대기자 목록 -->
         <div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)" style="padding:8px; margin-bottom:0; position:sticky; top:10px;">
-          <h3 style="margin: 0 0 6px 0; font-size: 0.85rem; color:var(--primary);">🙋‍♂️ 대기자 <span style="font-size:0.7rem; font-weight:normal; color:#666;">(↕ 스크롤)</span></h3>
+          <h3 style="margin: 0 0 6px 0; font-size: 0.85rem; color:var(--primary);">🙋‍♂️ 대기자 목록</h3>
           <div id="queueBox"></div>
         </div>
 
@@ -716,6 +696,11 @@
       
       queueBox.innerHTML = queue.map(item => `
         <div class="draggable-item" 
+             draggable="true" 
+             ondragstart="dragStart(event, ${item.id}, 'queue')"
+             ontouchstart="touchStart(event, ${item.id}, 'queue')"
+             ontouchmove="touchMove(event)"
+             ontouchend="touchEnd(event, ${item.id}, 'queue')"
              style="justify-content: center; padding: 8px 10px;"
              data-id="${item.id}"
              data-from="queue">
@@ -732,6 +717,11 @@
           if (item) {
             return `
               <div class="draggable-item" 
+                   draggable="true" 
+                   ondragstart="dragStart(event, ${item.id}, '${key}')"
+                   ontouchstart="touchStart(event, ${item.id}, '${key}')"
+                   ontouchmove="touchMove(event)"
+                   ontouchend="touchEnd(event, ${item.id}, '${key}')"
                    style="background:#3a5c41; border-color:#1e3d24; justify-content: center; padding: 6px 8px;" 
                    data-id="${item.id}"
                    data-from="${key}">
@@ -772,7 +762,7 @@
       moveMemberToZone(Number(data.itemId), data.fromZone, 'queue');
     }
 
-    /* 📱 렉 및 프레임 드랍 제로 터치 엔진 */
+    /* 📱 모바일 터치 & 스크롤 완벽 구분 터치 엔진 */
     let touchedEl = null;
     let touchClone = null;
     let startX = 0;
@@ -787,7 +777,7 @@
       startY = touch.clientY;
       isDragging = false;
       
-      touchedEl = e.currentTarget.closest('.draggable-item');
+      touchedEl = e.currentTarget;
     }
 
     function touchMove(e) {
@@ -798,12 +788,15 @@
       const moveY = Math.abs(touch.clientY - startY);
 
       if (!isDragging) {
-        if (moveY > 5 && moveY > moveX) {
+        // 💡 위아래 단순 스크롤시 터치드래그 판정을 하지 않고 즉시 빠져나가 부드러운 스크롤 보장
+        if (moveY > 8 && moveY > moveX) {
           touchedEl = null;
+          isDragging = false;
           return;
         }
         
-        if (moveX > 8 || moveY > 8) {
+        // 옆으로 끌거나 일정 거리 이상 꾹 누르며 이동 시 드래그 모드 발동
+        if (moveX > 10 || moveY > 10) {
           isDragging = true;
           touchClone = touchedEl.cloneNode(true);
           touchClone.classList.add('dragging-touch');
