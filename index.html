@@ -691,25 +691,32 @@
       return `${item.name} (${roleTag}${item.level})`;
     }
 
-    function renderQueueAndCourts() {
+function renderQueueAndCourts() {
       const queueBox = document.getElementById('queueBox');
+      const isAdmin = currentUser && currentUser.isAdmin;
       
+      // 1. 대기자 목록 렌더링
       queueBox.innerHTML = queue.map(item => `
         <div class="draggable-item" 
-             draggable="true" 
-             ondragstart="dragStart(event, ${item.id}, 'queue')"
-             ontouchstart="touchStart(event, ${item.id}, 'queue')"
-             ontouchmove="touchMove(event)"
-             ontouchend="touchEnd(event, ${item.id}, 'queue')"
-             style="justify-content: center; padding: 8px 10px;"
+             ${isAdmin ? `
+               draggable="true" 
+               ondragstart="dragStart(event, ${item.id}, 'queue')"
+               ontouchstart="touchStart(event, ${item.id}, 'queue')"
+               ontouchmove="touchMove(event)"
+               ontouchend="touchEnd(event, ${item.id}, 'queue')"
+             ` : ''}
+             style="justify-content: center; padding: 8px 10px; ${!isAdmin ? 'cursor:default;' : ''}"
              data-id="${item.id}"
              data-from="queue">
           <span>${formatMemberLabel(item)}</span>
         </div>
       `).join('') || '<span style="color:#788c7b; font-size:0.8rem; width:100%; text-align:center; padding:15px 0;">출석 처리된 회원이 없습니다.</span>';
 
+      // 2. 코트 및 대기매치 렌더링 (비로그인 유저에게도 완벽히 보이도록 수정)
       for (let key in courtSlots) {
         const slotEl = document.getElementById(`slot-${key}`);
+        if (!slotEl) continue;
+
         const list = courtSlots[key] || [];
         
         slotEl.innerHTML = [0, 1, 2, 3].map(idx => {
@@ -717,12 +724,14 @@
           if (item) {
             return `
               <div class="draggable-item" 
-                   draggable="true" 
-                   ondragstart="dragStart(event, ${item.id}, '${key}')"
-                   ontouchstart="touchStart(event, ${item.id}, '${key}')"
-                   ontouchmove="touchMove(event)"
-                   ontouchend="touchEnd(event, ${item.id}, '${key}')"
-                   style="background:#3a5c41; border-color:#1e3d24; justify-content: center; padding: 6px 8px;" 
+                   ${isAdmin ? `
+                     draggable="true" 
+                     ondragstart="dragStart(event, ${item.id}, '${key}')"
+                     ontouchstart="touchStart(event, ${item.id}, '${key}')"
+                     ontouchmove="touchMove(event)"
+                     ontouchend="touchEnd(event, ${item.id}, '${key}')"
+                   ` : ''}
+                   style="background:#3a5c41; border-color:#1e3d24; justify-content: center; padding: 6px 8px; ${!isAdmin ? 'cursor:default;' : ''}" 
                    data-id="${item.id}"
                    data-from="${key}">
                 <span style="font-size:0.75rem;">${formatMemberLabel(item)}</span>
