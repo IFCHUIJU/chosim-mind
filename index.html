@@ -535,20 +535,22 @@
       }
     }
 
-    /* ⚡ 대기 매치 전체 이동 완벽 지원 함수 */
+    /* ⚡ 이동 및 복사 방지 수정 로직 */
     function moveMatch(fromMatchKey, targetCourtKey) {
       if (!currentUser || !currentUser.isAdmin) return alert('운영진만 이동이 가능합니다.');
       
       const sourceList = courtSlots[fromMatchKey];
       if (!sourceList || sourceList.length === 0) return alert('이동할 회원이 대기 매치에 없습니다.');
 
-      // 대상 코트에 기존 회원이 있다면 대기열로 복귀
+      // 1. 코트에 이미 진행중인 회원이 존재하면 대기열(queue)로 내보냄
       if (courtSlots[targetCourtKey] && courtSlots[targetCourtKey].length > 0) {
         courtSlots[targetCourtKey].forEach(item => queue.push(item));
       }
 
-      // 대기 매치 회원을 해당 코트로 이동 후 대기 매치 비움
-      courtSlots[targetCourtKey] = [...sourceList];
+      // 2. 대기 매치의 선수들을 해당 코트로 완전히 이동시킴
+      courtSlots[targetCourtKey] = JSON.parse(JSON.stringify(sourceList));
+
+      // 3. 기존 대기 매치 비우기 (복사 방지 핵심)
       courtSlots[fromMatchKey] = [];
 
       saveDataToDB();
@@ -682,7 +684,7 @@
       if (!touchClone) return;
       
       const touch = e.changedTouches[0];
-      const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
+      targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
 
       document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
       touchClone.remove();
