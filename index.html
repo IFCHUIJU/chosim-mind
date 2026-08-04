@@ -168,18 +168,41 @@
       box-shadow: 0 10px 20px rgba(0,0,0,0.25) !important;
     }
 
+/* 🙋‍♂️ 대기자 박스 & 스크롤바 설정 */
     #queueBox {
       min-height: 250px; 
-      max-height: calc(100vh - 180px); /* 모바일 화면 높이에 맞게 고정 */
-      overflow-y: auto;
+      max-height: calc(100vh - 200px); /* 화면 높이에 맞춘 고정 높이 */
+      overflow-y: scroll;             /* 항상 스크롤 가능하게 설정 */
       background: #f0f4ef; 
       padding: 8px; 
       border-radius: 12px; 
       border: 1.5px solid var(--border); 
       display: flex; 
-      flex-direction: column; /* 세로로 예쁘게 정렬 */
+      flex-direction: column; 
       gap: 5px; 
       align-content: stretch;
+      
+      /* 모바일 환경 터치 스크롤 부드럽게 */
+      -webkit-overflow-scrolling: touch; 
+    }
+
+    /* 🎨 웹킷 브라우저(크롬, 사파리, 웨일 등) 전용 스크롤바 디자인 */
+    #queueBox::-webkit-scrollbar {
+      width: 6px; /* 스크롤바 두께 */
+    }
+
+    #queueBox::-webkit-scrollbar-track {
+      background: #e3ede2; /* 스크롤바 배경 트랙 색상 */
+      border-radius: 10px;
+    }
+
+    #queueBox::-webkit-scrollbar-thumb {
+      background: var(--accent); /* 스크롤바 막대 색상 (포인트 그린) */
+      border-radius: 10px;
+    }
+
+    #queueBox::-webkit-scrollbar-thumb:hover {
+      background: var(--primary); /* 마우스 올렸을 때 색상 */
     }
     
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -281,12 +304,13 @@
           </div>
         </div>
 
-        <table>
+	<table>
           <thead>
             <tr>
               <th>이름</th>
               <th>성별</th>
               <th>급수</th>
+              <th>구분</th> <!-- ✨ 추가됨 -->
               <th>출석</th>
               <th>관리</th>
             </tr>
@@ -511,9 +535,9 @@
       renderQueueAndCourts();
     }
 
-    function toggleAttendance(id) {
+function toggleAttendance(id) {
       if (!currentUser || !currentUser.isAdmin) {
-        alert('운영진 계정(admin)만 조작이 가능합니다.');
+        alert('운영진만 조작이 가능합니다.');
         return;
       }
       const m = members.find(x => x.id === id);
@@ -522,7 +546,7 @@
       m.isPresent = !m.isPresent;
       if (m.isPresent) {
         if (!queue.some(item => item.id === m.id)) {
-          queue.push({ id: m.id, name: m.name, gender: m.gender, level: m.level });
+          queue.push({ id: m.id, name: m.name, gender: m.gender, level: m.level, role: m.role || '정회원' });
         }
       } else {
         queue = queue.filter(item => item.id !== m.id);
@@ -637,7 +661,7 @@ function moveMatch(fromMatchKey, targetCourtKey) {
       saveDataToDB();
     }
 
-    function renderMembers() {
+function renderMembers() {
       const isAdmin = currentUser && currentUser.isAdmin;
       const tbody = document.getElementById('memberTableBody');
       tbody.innerHTML = members.map(m => `
@@ -645,6 +669,7 @@ function moveMatch(fromMatchKey, targetCourtKey) {
           <td><b>${m.name}</b></td>
           <td>${m.gender}</td>
           <td>${m.level}</td>
+          <td><span style="font-size:0.75rem; padding:2px 6px; border-radius:10px; background:${m.role === '게스트' ? '#fff3cd' : '#e2e3e5'}; color:${m.role === '게스트' ? '#856404' : '#383d41'}; font-weight:bold;">${m.role || '정회원'}</span></td>
           <td>
             <span style="cursor:pointer;" onclick="${isAdmin ? `toggleAttendance(${m.id})` : ''}">
               ${m.isPresent ? '🟢' : '🔴'}
@@ -662,8 +687,9 @@ function moveMatch(fromMatchKey, targetCourtKey) {
       `).join('');
     }
 
-    function formatMemberLabel(item) {
-      return `${item.name} (${item.gender}/${item.level})`;
+function formatMemberLabel(item) {
+      const roleTag = item.role === '게스트' ? '🎈게스트' : '정';
+      return `${item.name} (${roleTag}/${item.level})`;
     }
 
     function renderQueueAndCourts() {
