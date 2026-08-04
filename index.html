@@ -3,14 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- 📌 웹앱 이름을 '초심처럼'으로 변경 -->
   <title>초심처럼</title>
   
   <!-- Firebase SDK 라이브러리 로드 -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   
-  <!-- 🌿 로고 이미지를 파비콘 및 스마트폰 앱 아이콘으로 연결 -->
   <link rel="icon" type="image/png" href="logo.png">
   <link rel="apple-touch-icon" href="logo.png">
   <meta name="apple-mobile-web-app-title" content="초심처럼">
@@ -19,22 +17,21 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <style>
-    /* 🌿 감성 로고 팔레트 그대로 반영 */
     :root {
-      --primary: #1f3a25;         /* 로고의 캘리그라피 딥 포레스트 그린 */
-      --primary-light: #eef3ed;   /* 은은한 잎사귀 그린 빛 투명 베이스 */
-      --accent: #6b8869;          /* 세이지 그린 */
-      --accent-soft: #8ba388;     /* 라켓/월계수 라인 그린 */
-      --bg: #f7f6f0;              /* 로고 원본 크림 아이보리 배경 */
+      --primary: #1f3a25;         /* 로고 딥 그린 */
+      --primary-light: #eef3ed;   
+      --accent: #6b8869;          
+      --accent-soft: #8ba388;     
+      --bg: #f7f6f0;              /* 크림 아이보리 */
       --card: #ffffff;
-      --text: #202b22;            /* 고급스러운 딥 텍스트 */
-      --border: #dfeddd;
-      --border-soft: #e8ede6;
+      --text: #202b22;            
+      --border: #cee0cc;
+      --border-soft: #e3ede2;
     }
     * { box-sizing: border-box; }
     body { font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); }
     
-    /* 1. Landing / Login Screen */
+    /* Landing Screen */
     #landingScreen {
       position: fixed;
       inset: 0;
@@ -75,7 +72,6 @@
       font-size: 0.92rem;
       background: #fafbfa;
       outline: none;
-      transition: 0.2s;
     }
     .landing-box input:focus { border-color: var(--accent); background: #fff; }
     .landing-box .info-text {
@@ -89,14 +85,11 @@
       line-height: 1.5;
       border: 1px solid var(--border);
     }
-    .btn-block { width: 100%; padding: 13px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 8px; border: none; transition: 0.2s; }
+    .btn-block { width: 100%; padding: 13px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 8px; border: none; }
     .btn-guest { background: #eef0eb; color: #48594b; }
-    .btn-guest:hover { background: #e2e6df; }
     
-    /* 2. Main App Screen */
+    /* Main Screen */
     #mainAppScreen { display: none; }
-    
-    /* Header & Navigation */
     .header { background: #ffffff; color: var(--primary); padding: 16px 15px; text-align: center; position: relative; border-bottom: 1px solid var(--border); }
     .header h1 { margin: 0; font-size: 1.2rem; letter-spacing: -0.5px; font-weight: 800; }
     .user-info { position: absolute; right: 12px; top: 13px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; }
@@ -104,16 +97,15 @@
 
     /* Tabs */
     .tabs { display: flex; background: #ffffff; border-bottom: 1px solid var(--border-soft); padding: 0 10px; }
-    .tab-btn { flex: 1; padding: 13px 5px; border: none; background: none; font-size: 0.88rem; font-weight: 600; color: #7f9181; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
+    .tab-btn { flex: 1; padding: 13px 5px; border: none; background: none; font-size: 0.88rem; font-weight: 600; color: #7f9181; cursor: pointer; border-bottom: 2px solid transparent; }
     .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); font-weight: 700; }
     .tab-content { display: none; padding: 14px; max-width: 600px; margin: 0 auto; }
     .tab-content.active { display: block; }
 
-    /* UI Components */
+    /* Cards & Buttons */
     .card { background: var(--card); padding: 16px; border-radius: 16px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(31, 58, 37, 0.03); border: 1px solid var(--border-soft); }
-    .btn { padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.75rem; transition: 0.15s; }
+    .btn { padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.75rem; }
     .btn-main { background: var(--primary); color: white; }
-    .btn-main:hover { background: #15291a; }
     .btn-action { background: var(--accent); color: white; }
     .btn-danger { background: #d9534f; color: white; }
     .btn-edit { background: #e09f3e; color: white; }
@@ -126,42 +118,71 @@
     .drop-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 10px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
     .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; min-height: 60px; }
     
-    .draggable-item { background: var(--primary-light); border: 1px solid var(--border); color: var(--primary); padding: 7px 12px; border-radius: 20px; font-size: 0.8rem; cursor: grab; display: inline-flex; align-items: center; justify-content: center; margin: 2px; user-select: none; text-align: center; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-    .draggable-item:active { cursor: grabbing; opacity: 0.6; }
+    /* 🎨 시각적 선명함을 극대화한 회원 이름 태그 (버튼 방식 지원) */
+    .draggable-item { 
+      background: var(--primary); 
+      border: 1px solid #142819; 
+      color: #ffffff; 
+      padding: 10px 14px; 
+      border-radius: 12px; 
+      font-size: 0.85rem; 
+      cursor: pointer; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      margin: 3px; 
+      user-select: none; 
+      text-align: center; 
+      font-weight: 700; 
+      box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+      transition: transform 0.1s, background 0.2s;
+    }
+    .draggable-item:active { transform: scale(0.96); opacity: 0.9; }
+
+    /* 대기열 내부 슬롯 배경도 선명하게 선을 그어줌 */
+    #queueBox {
+      min-height: 100px; 
+      background: #f0f4ef; 
+      padding: 12px; 
+      border-radius: 14px; 
+      border: 1.5px solid var(--border); 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 6px; 
+      align-content: flex-start;
+    }
     
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     th, td { padding: 10px 4px; text-align: center; border-bottom: 1px solid var(--border-soft); }
-    th { background: var(--primary-light); color: var(--primary); font-weight: 700; border-top-left-radius: 6px; border-top-right-radius: 6px; }
+    th { background: var(--primary-light); color: var(--primary); font-weight: 700; }
   </style>
 </head>
 <body>
 
-  <!-- ================= 1. 첫 접속 메인 로그인 화면 ================= -->
+  <!-- 1. 로그인 화면 -->
   <div id="landingScreen">
     <div class="landing-box">
-      <!-- 🌿 올려주신 로고 이미지 그대로 표시 -->
       <img src="logo.png" alt="초심처럼 로고" class="logo-img" onerror="this.style.display='none'">
       <h1>초심처럼</h1>
       <p class="subtitle">처음의 마음으로, 함께 즐기는 배드민턴</p>
       
       <div class="info-text">
         <b>💡 접속 안내</b><br>
-        • <b>일반회원:</b> 로그인 없이 입장으로 접속
+        • <b>운영진:</b> ID <code>admin</code> / PW <code>1234</code><br>
+        • <b>일반회원:</b> 본인 이름만 입력 후 접속
       </div>
 
-      <input type="text" id="landingId" placeholder="아이디 입력">
+      <input type="text" id="landingId" placeholder="아이디 또는 이름 입력">
       <input type="password" id="landingPw" placeholder="비밀번호 (운영진 전용)">
       
       <button class="btn-block btn-main" onclick="enterAppWithLogin()">로그인 후 입장</button>
-      <button class="btn-block btn-guest" onclick="enterAppAsGuest()">로그인 없이 입장</button>
+      <button class="btn-block btn-guest" onclick="enterAppAsGuest()">로그인 없이 구경하기</button>
     </div>
   </div>
 
-  <!-- ================= 2. 모임 관리 메인 앱 화면 ================= -->
+  <!-- 2. 메인 앱 화면 -->
   <div id="mainAppScreen">
-    <!-- Header -->
     <div class="header">
-      <!-- 📌 단순 깔끔하게 변경된 타이틀 -->
       <h1>초심처럼</h1>
       <div class="user-info" id="user-bar">
         <span id="role-label">비로그인</span>
@@ -169,7 +190,6 @@
       </div>
     </div>
 
-    <!-- Navigation Tabs -->
     <div class="tabs">
       <button class="tab-btn active" onclick="openTab(event, 'noticeTab')">📢 공지사항</button>
       <button class="tab-btn" onclick="openTab(event, 'memberTab')">👥 회원/출석</button>
@@ -177,7 +197,6 @@
     </div>
 
     <!-- TAB 1: 공지사항 -->
-<!-- TAB 1: 공지사항 -->
     <div id="noticeTab" class="tab-content active">
       <div class="card">
         <h3 style="color:var(--primary); margin-top:5px; margin-bottom:12px; font-size:1.1rem; border-bottom:2px solid var(--border-soft); padding-bottom:8px;">📌 모임 안내</h3>
@@ -200,9 +219,9 @@
           <li>하루 정원은 <b>'12명'</b>입니다.</li>
           <li>체육관 도착 시 운영진에게 <b>지정콕 2개 제출</b> 필수입니다.</li>
           <li>와우산을 거점으로 활동하되, 여름/겨울철은 벙 형식으로 운영될 수 있습니다.</li>
-          <li>벙은 이미 활성화된 운동 시간을 제외하고 자유롭게 개최 가능합니다. <span style="font-size:0.8rem; color:#666;">(단, 참석인원 전원 동의 시 체육관 변경 가능)</span></li>
-          <li>게스트 신청은 단톡방 통보 후 댓글에 <b>[성함/성별/급수]</b> 작성 바랍니다. <span style="font-size:0.8rem; color:#d9534f;">(게스트 관련 문제는 신청자 책임)</span></li>
-          <li>지각 및 당일 불참 시 반드시 톡방에 통보해야 합니다. <span style="font-size:0.8rem; color:#d9534f;">(당일 불참 시 최소 운동 시작 2시간 전까지!)</span></li>
+          <li>벙은 이미 활성화된 운동 시간을 제외하고 자유롭게 개최 가능합니다.</li>
+          <li>게스트 신청은 단톡방 통보 후 댓글에 <b>[성함/성별/급수]</b> 작성 바랍니다.</li>
+          <li>지각 및 당일 불참 시 최소 <b>2시간 전까지</b> 톡방 통보!</li>
         </ul>
       </div>
 
@@ -214,15 +233,11 @@
           <li>운영진 선에서 통제가 불가능한 독불장군</li>
           <li>그 외 모임의 물을 흐리는 분</li>
         </ul>
-        <p style="margin-top: 12px; margin-bottom: 0; font-size: 0.82rem; color: #d9534f; font-weight: bold;">※ 위 사항에 해당되는 분은 경고 없이 언제든 제명될 수 있습니다.</p>
-      </div>
-
-      <div style="text-align: center; padding: 10px; font-size: 0.85rem; color: var(--accent);">
-        💬 궁금한 사항은 모임장 및 운영진에게 언제든지 문의해 주세요!
+        <p style="margin-top: 12px; margin-bottom: 0; font-size: 0.82rem; color: #d9534f; font-weight: bold;">※ 위 사항에 해당되는 분은 경고 없이 제명될 수 있습니다.</p>
       </div>
     </div>
 
-    <!-- TAB 2: 회원명단 및 출석체크 -->
+    <!-- TAB 2: 회원 명단 -->
     <div id="memberTab" class="tab-content">
       <div class="card">
         <h3 style="color:var(--primary); margin-top:5px; font-size:1.05rem;">📋 회원 명단 및 출석 관리</h3>
@@ -252,10 +267,9 @@
       </div>
     </div>
 
-    <!-- TAB 3: 세로형 게임판 및 대기열 -->
+    <!-- TAB 3: 코트 및 대기열 -->
     <div id="gameTab" class="tab-content">
       <div class="board-container">
-        <!-- 1. 게임 진행 및 대기 매치 -->
         <div class="drop-zone-container">
           <!-- 1코트 -->
           <div class="drop-card">
@@ -304,11 +318,14 @@
           </div>
         </div>
 
-        <!-- 2. 대기열 목록 -->
+        <!-- 대기열 카드 -->
         <div class="card">
           <h3 style="margin: 0 0 4px 0; font-size: 0.95rem; color:var(--primary);">🙋‍♂️ 대기열 (출석자)</h3>
-          <p style="font-size:0.75rem; color:#78887a; margin-top:0;">운영진은 회원을 위쪽 코트로 드래그해서 배치하세요.</p>
-          <div id="queueBox" style="min-height: 90px; background:var(--primary-light); padding:10px; border-radius:12px; border:1px solid var(--border); display:flex; flex-wrap:wrap; gap:4px;" ondrop="dropToQueue(event)" ondragover="allowDrop(event)"></div>
+          <p style="font-size:0.75rem; color:#5c6e5e; margin-top:0; margin-bottom:8px;">
+            💡 <b>모바일:</b> 이름 터치 후 이동할 위치 선택<br>
+            💡 <b>PC:</b> 드래그 앤 드롭으로 이동 가능
+          </p>
+          <div id="queueBox" ondrop="dropToQueue(event)" ondragover="allowDrop(event)"></div>
         </div>
 
       </div>
@@ -316,7 +333,7 @@
   </div>
 
   <script>
-    // 🔥 Firebase 설정 영역
+    // 🔥 Firebase 설정
     const firebaseConfig = {
       apiKey: "AIzaSyA-0xNU39H2wjmm0R8HT98mSsU92TyGBaQ",
       authDomain: "badminton--app.firebaseapp.com",
@@ -333,7 +350,7 @@
         firebase.initializeApp(firebaseConfig);
         db = firebase.database();
       }
-    } catch(e) { console.log("DB 로컬 테스트 작동중"); }
+    } catch(e) { console.log("DB 작동중"); }
 
     let currentUser = null;
     let members = [];
@@ -503,6 +520,38 @@
       }
     }
 
+    /* 📱 스마트폰용 원터치 이동 메뉴 구현 */
+    function handleMemberClick(itemId, currentZone) {
+      if (!currentUser || !currentUser.isAdmin) return;
+
+      let targetChoice;
+      if (currentZone === 'queue') {
+        targetChoice = prompt(`'이동할 위치를 입력하세요:\n\n1: 1코트\n2: 2코트\n3: 대기1 매치\n4: 대기2 매치`);
+        if (targetChoice === '1') moveMemberToZone(itemId, 'queue', 'c1');
+        else if (targetChoice === '2') moveMemberToZone(itemId, 'queue', 'c2');
+        else if (targetChoice === '3') moveMemberToZone(itemId, 'queue', 'w1');
+        else if (targetChoice === '4') moveMemberToZone(itemId, 'queue', 'w2');
+      } else {
+        if (confirm(`해당 회원을 대기열로 복귀시키겠습니까?`)) {
+          moveMemberToZone(itemId, currentZone, 'queue');
+        }
+      }
+    }
+
+    function moveMemberToZone(itemId, fromZone, toZone) {
+      if (toZone !== 'queue' && courtSlots[toZone].length >= 4) {
+        return alert('정원(4명)이 가득 찬 구역입니다.');
+      }
+
+      const item = removeFromZone(itemId, fromZone);
+      if (item) {
+        if (toZone === 'queue') queue.push(item);
+        else courtSlots[toZone].push(item);
+        saveDataToDB();
+        renderQueueAndCourts();
+      }
+    }
+
     function moveMatch(fromMatchKey, targetCourtKey) {
       if (!currentUser || !currentUser.isAdmin) return;
       const sourceList = courtSlots[fromMatchKey];
@@ -551,12 +600,18 @@
     function renderQueueAndCourts() {
       const isAdmin = currentUser && currentUser.isAdmin;
       const queueBox = document.getElementById('queueBox');
+      
+      // 대기열 렌더링 (클릭 & 드래그 모두 지원)
       queueBox.innerHTML = queue.map(item => `
-        <div class="draggable-item" draggable="${isAdmin}" ondragstart="dragStart(event, ${item.id}, 'queue')">
+        <div class="draggable-item" 
+             draggable="${isAdmin}" 
+             ondragstart="dragStart(event, ${item.id}, 'queue')"
+             onclick="handleMemberClick(${item.id}, 'queue')">
           <span>${formatMemberLabel(item)}</span>
         </div>
-      `).join('') || '<span style="color:#819483; font-size:0.8rem; width:100%; text-align:center;">출석 처리된 회원이 표시됩니다.</span>';
+      `).join('') || '<span style="color:#788c7b; font-size:0.8rem; width:100%; text-align:center; padding:15px 0;">출석 처리된 회원이 없습니다.</span>';
 
+      // 코트 슬롯 렌더링
       for (let key in courtSlots) {
         const slotEl = document.getElementById(`slot-${key}`);
         const list = courtSlots[key];
@@ -565,12 +620,16 @@
           const item = list[idx];
           if (item) {
             return `
-              <div class="draggable-item" style="background:#e3ebd2; border-color:#c8d6b2;" draggable="${isAdmin}" ondragstart="dragStart(event, ${item.id}, '${key}')">
+              <div class="draggable-item" 
+                   style="background:#3a5c41; border-color:#1e3d24;" 
+                   draggable="${isAdmin}" 
+                   ondragstart="dragStart(event, ${item.id}, '${key}')"
+                   onclick="handleMemberClick(${item.id}, '${key}')">
                 <span>${formatMemberLabel(item)}</span>
               </div>
             `;
           } else {
-            return `<div style="border:1px dashed #d0ded1; border-radius:6px; height:32px; display:flex; align-items:center; justify-content:center; color:#9cb39e; font-size:0.75rem;">빈 슬롯</div>`;
+            return `<div style="border:1.5px dashed #c1d1c3; border-radius:10px; height:38px; display:flex; align-items:center; justify-content:center; color:#889e8a; font-size:0.75rem; background:#fafcf9;">빈 슬롯</div>`;
           }
         }).join('');
       }
@@ -585,27 +644,14 @@
       ev.preventDefault();
       if (!currentUser || !currentUser.isAdmin) return;
       const data = JSON.parse(ev.dataTransfer.getData("text/plain"));
-      if (courtSlots[courtKey].length >= 4) return alert('4명 정원이 찬 코트입니다.');
-
-      const item = removeFromZone(data.itemId, data.fromZone);
-      if (item) {
-        courtSlots[courtKey].push(item);
-        saveDataToDB();
-        renderQueueAndCourts();
-      }
+      moveMemberToZone(data.itemId, data.fromZone, courtKey);
     }
     function dropToQueue(ev) {
       ev.preventDefault();
       if (!currentUser || !currentUser.isAdmin) return;
       const data = JSON.parse(ev.dataTransfer.getData("text/plain"));
       if (data.fromZone === 'queue') return;
-
-      const item = removeFromZone(data.itemId, data.fromZone);
-      if (item) {
-        queue.push(item);
-        saveDataToDB();
-        renderQueueAndCourts();
-      }
+      moveMemberToZone(data.itemId, data.fromZone, 'queue');
     }
     function removeFromZone(itemId, fromZone) {
       let removedItem = null;
