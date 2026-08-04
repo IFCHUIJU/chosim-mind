@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>초심처럼 - 배드민턴 모임 관리</title>
+  <!-- Firebase SDK 라이브러리 로드 -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    /* 🌿 로고 이미지 기반 Palette 설정 */
+    :root {
+      --primary: #1b3b22;         /* 로고의 딥 포레스트 그린 */
+      --primary-light: #eaf0e8;   /* 연한 산뜻한 그린 베이스 */
+      --accent: #7a9a60;          /* 잎사귀 올리브/세이지 그린 */
+      --bg: #f5f6f2;              /* 소프트 아이보리 톤 배경 */
+      --card: #ffffff;
+      --text: #222c24;            /* 딥 그레이/그린 텍스트 */
+      --border: #d4ded0;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Apple SD Gothic Neo', sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    
+    /* 1. Landing / Login Screen */
+    #landingScreen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #132a18, #1b3b22, #2d4f35);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+    .landing-box {
+      background: #fafaf7;
+      padding: 30px 25px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .landing-box h1 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.6rem; letter-spacing: -0.5px; }
+    .landing-box p.subtitle { margin-top: 0; font-size: 0.85rem; color: var(--accent); margin-bottom: 20px; font-weight: 500; }
+    .landing-box input {
+      width: 100%;
+      padding: 12px;
+      margin: 6px 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #fff;
+    }
+    .landing-box .info-text {
+      background: var(--primary-light);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.78rem;
+      color: #334436;
+      margin-bottom: 15px;
+      text-align: left;
+      line-height: 1.4;
+      border: 1px solid #d0dfcc;
+    }
+    .btn-block { width: 100%; padding: 12px; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; margin-top: 8px; border: none; transition: 0.2s; }
+    .btn-guest { background: #e8eae4; color: #445046; border: 1px solid #ced4ca; }
+    
+    /* 2. Main App Screen */
+    #mainAppScreen { display: none; }
+    
+    /* Header & Navigation */
+    .header { background: var(--primary); color: white; padding: 14px 15px; text-align: center; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .header h1 { margin: 0; font-size: 1.2rem; letter-spacing: -0.5px; }
+    .user-info { position: absolute; right: 10px; top: 12px; font-size: 0.8rem; }
+    .btn-logout { background: rgba(255,255,255,0.18); color: white; border: none; padding: 5px 9px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+
+    /* Tabs */
+    .tabs { display: flex; background: white; border-bottom: 1px solid var(--border); }
+    .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; font-size: 0.9rem; font-weight: bold; color: #6e7e72; cursor: pointer; }
+    .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+    .tab-content { display: none; padding: 12px; }
+    .tab-content.active { display: block; }
+
+    /* UI Components */
+    .card { background: var(--card); padding: 14px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid #eef2ec; }
+    .btn { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.75rem; }
+    .btn-main { background: var(--primary); color: white; }
+    .btn-action { background: #4a6b53; color: white; }
+    .btn-danger { background: #c62828; color: white; }
+    .btn-edit { background: #d97706; color: white; }
+    .btn-disabled { background: #d1d5db !important; color: #6b7280 !important; cursor: not-allowed !important; }
+    
+    /* Board Layout */
+    .board-container { display: flex; flex-direction: column; gap: 12px; }
+    .drop-zone-container { display: flex; flex-direction: column; gap: 10px; }
+    .drop-card { background: #fff; border: 2px dashed #b2c2b0; border-radius: 10px; padding: 10px; }
+    .drop-title { font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
+    .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; min-height: 60px; }
+    
+    .draggable-item { background: #f0f4ef; border: 1px solid #cce0c9; color: var(--primary); padding: 6px 10px; border-radius: 20px; font-size: 0.8rem; cursor: grab; display: inline-flex; align-items: center; justify-content: center; margin: 2px; user-select: none; text-align: center; font-weight: 600; }
+    .draggable-item:active { cursor: grabbing; opacity: 0.6; }
+    
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 9px 4px; text-align: center; border-bottom: 1px solid #eef2ec; }
+    th { background: var(--primary-light); color: var(--primary); font-weight: bold; }
+  </style>
+<!-- 웹앱 및 파비콘(아이콘) 설정 -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231b3b22'/><path d='M50 20 C40 35 35 55 35 68 C35 76 65 76 65 68 C65 55 60 35 50 20 Z' fill='none' stroke='%23ffffff' stroke-width='3' stroke-dasharray='4,3'/><path d='M35 68 C35 76 65 76 65 68 Z' fill='%237a9a60'/><circle cx='50' cy='78' r='6' fill='%23ffffff'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231b3b22'/><path d='M50 20 C40 35 35 55 35 68 C35 76 65 76 65 68 C65 55 60 35 50 20 Z' fill='none' stroke='%23ffffff' stroke-width='3' stroke-dasharray='4,3'/><path d='M35 68 C35 76 65 76 65 68 Z' fill='%237a9a60'/><circle cx='50' cy='78' r='6' fill='%23ffffff'/></svg>">
+<meta name="theme-color" content="#1b3b22">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+  <!-- ================= 1. 첫 접속 메인 로그인 화면 ================= -->
+  <div id="landingScreen">
+    <div class="landing-box">
+      <h1>🏸 초심처럼</h1>
+      <p class="subtitle">처음의 마음으로, 함께 즐기는 배드민턴</p>
+      
+      <div class="info-text">
+        <b>💡 안내</b><br>
+        • <b>운영진:</b> ID <code>admin</code> / PW <code>1234</code><br>
+        • <b>일반회원:</b> 본인 이름을 입력 후 접속
+      </div>
+
+      <input type="text" id="landingId" placeholder="아이디 또는 이름 입력">
+      <input type="password" id="landingPw" placeholder="비밀번호 (운영진 전용)">
+      
+      <button class="btn-block btn-main" onclick="enterAppWithLogin()">로그인 후 입장</button>
+      <button class="btn-block btn-guest" onclick="enterAppAsGuest()">로그인 없이 구경하기</button>
+    </div>
+  </div>
+
+  <!-- ================= 2. 모임 관리 메인 앱 화면 ================= -->
+  <div id="mainAppScreen">
+    <!-- Header -->
+    <div class="header">
+      <h1>🏸 배드민턴 동호회 [초심처럼]</h1>
+      <div class="user-info" id="user-bar">
+        <span id="role-label">비로그인</span>
+        <button class="btn-logout" onclick="goToLandingScreen()">로그아웃</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="openTab(event, 'noticeTab')">📢 공지사항</button>
+      <button class="tab-btn" onclick="openTab(event, 'memberTab')">👥 회원/출석</button>
+      <button class="tab-btn" onclick="openTab(event, 'gameTab')">🏸 코트&대기열</button>
+    </div>
+
+    <!-- TAB 1: 공지사항 -->
+    <div id="noticeTab" class="tab-content active">
+      <div class="card">
+        <h3 style="color:var(--primary); margin-top:5px;">📌 [필독] '초심처럼' 모임 이용 수칙</h3>
+        <ul style="padding-left: 20px; font-size: 0.9rem; line-height: 1.7; color: #334436;">
+          <li><b>슬로건:</b> 처음의 마음으로, 함께 즐기는 배드민턴 🌿</li>
+          <li><b>일시:</b> 매일 저녁 7시 ~ 10시</li>
+          <li><b>장소:</b> 와우산 체육관</li>
+          <li><b>준비물:</b> 라켓, 배드민턴 전용화, 운동복</li>
+          <li><b>공용콕:</b> 삼화블랙 사용 (모임 내 구매 가능)</li>
+          <li>게스트는 1회 참석 체험 후 가입 승인 절차가 진행됩니다.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- TAB 2: 회원명단 및 출석체크 -->
+    <div id="memberTab" class="tab-content">
+      <div class="card">
+        <h3 style="color:var(--primary); margin-top:5px;">📋 회원 명단 및 출석 관리</h3>
+        <div id="adminAddMember" style="display:none; margin-bottom:15px; background:var(--primary-light); padding:10px; border-radius:8px; border:1px solid #d0dfcc;">
+          <b style="color:var(--primary);">[운영진] 신규 회원 등록</b>
+          <div style="display:flex; gap:4px; margin-top:5px; flex-wrap:wrap;">
+            <input type="text" id="newName" placeholder="이름" style="padding:6px; flex:1; min-width:70px; border:1px solid #ccc; border-radius:4px;">
+            <select id="newGender" style="padding:6px; border-radius:4px;"><option value="남">남</option><option value="여">여</option></select>
+            <select id="newLevel" style="padding:6px; border-radius:4px;"><option value="초심">초심</option><option value="D조">D조</option><option value="C조">C조</option><option value="B조">B조</option><option value="A조">A조</option></select>
+            <select id="newRole" style="padding:6px; border-radius:4px;"><option value="정회원">정회원</option><option value="게스트">게스트</option></select>
+            <button class="btn btn-main" onclick="addMember()">추가</button>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>이름</th>
+              <th>성별</th>
+              <th>급수</th>
+              <th>출석</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: 세로형 게임판 및 대기열 -->
+    <div id="gameTab" class="tab-content">
+      <div class="board-container">
+        <!-- 1. 게임 진행 및 대기 매치 (상단 배치) -->
+        <div class="drop-zone-container">
+          <!-- 1코트 (진행 중) -->
+          <div class="drop-card">
+            <div class="drop-title">
+              <span>🏟️ 1코트 (진행)</span>
+              <span id="btnC1Win" style="display:none;">
+                <button class="btn btn-danger" style="font-size:0.65rem; padding:3px 6px;" onclick="finishGame('c1')">게임 종료</button>
+              </span>
+            </div>
+            <div class="slots" id="slot-c1" ondrop="dropToCourt(event, 'c1')" ondragover="allowDrop(event)"></div>
+          </div>
+
+          <!-- 2코트 (진행 중) -->
+          <div class="drop-card">
+            <div class="drop-title">
+              <span>🏟️ 2코트 (진행)</span>
+              <span id="btnC2Win" style="display:none;">
+                <button class="btn btn-danger" style="font-size:0.65rem; padding:3px 6px;" onclick="finishGame('c2')">게임 종료</button>
+              </span>
+            </div>
+            <div class="slots" id="slot-c2" ondrop="dropToCourt(event, 'c2')" ondragover="allowDrop(event)"></div>
+          </div>
+
+          <!-- 대기 1 매치 -->
+          <div class="drop-card">
+            <div class="drop-title">
+              <span>⏱️ 대기 1 매치</span>
+              <span class="admin-only-btn" style="display:none;">
+                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 5px;" onclick="moveMatch('w1', 'c1')">⚡1코트이동</button>
+                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 5px;" onclick="moveMatch('w1', 'c2')">⚡2코트이동</button>
+              </span>
+            </div>
+            <div class="slots" id="slot-w1" ondrop="dropToCourt(event, 'w1')" ondragover="allowDrop(event)"></div>
+          </div>
+
+          <!-- 대기 2 매치 -->
+          <div class="drop-card">
+            <div class="drop-title">
+              <span>⏱️ 대기 2 매치</span>
+              <span class="admin-only-btn" style="display:none;">
+                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 5px;" onclick="moveMatch('w2', 'c1')">⚡1코트이동</button>
+                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 5px;" onclick="moveMatch('w2', 'c2')">⚡2코트이동</button>
+              </span>
+            </div>
+            <div class="slots" id="slot-w2" ondrop="dropToCourt(event, 'w2')" ondragover="allowDrop(event)"></div>
+          </div>
+        </div>
+
+        <!-- 2. 대기열 목록 (하단 배치) -->
+        <div class="card">
+          <h3 style="margin: 0 0 5px 0; font-size: 1rem; color:var(--primary);">🙋‍♂️ 대기열 (출석자)</h3>
+          <p style="font-size:0.75rem; color:#666; margin-top:0;">운영진은 회원을 위쪽 코트로 드래그하거나 대기 매치로 배치하세요.</p>
+          <div id="queueBox" style="min-height: 100px; background:#f5f7f4; padding:10px; border-radius:8px; border:1px solid #e2e8e0; display:flex; flex-wrap:wrap; gap:4px;" ondrop="dropToQueue(event)" ondragover="allowDrop(event)"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 🔥 Firebase 설정 영역
+const firebaseConfig = {
+  apiKey: "AIzaSyA-0xNU39H2wjmm0R8HT98mSsU92TyGBaQ",
+  authDomain: "badminton--app.firebaseapp.com",
+  databaseURL: "https://badminton--app-default-rtdb.firebaseio.com",
+  projectId: "badminton--app",
+  storageBucket: "badminton--app.firebasestorage.app",
+  messagingSenderId: "362202939444",
+  appId: "1:362202939444:web:c3030f50772697191a0a61"
+};
+    
+    let db = null;
+    try {
+      if(firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+      }
+    } catch(e) { console.log("DB 로컬 테스트 작동중"); }
+
+    let currentUser = null;
+    let members = [
+      { id: 1, name: '김철수', gender: '남', role: '정회원', level: 'D조', isPresent: false },
+      { id: 2, name: '이영희', gender: '여', role: '정회원', level: '초심', isPresent: false },
+      { id: 3, name: '박민수', gender: '남', role: '게스트', level: 'D조', isPresent: false }
+    ];
+    let queue = [];
+    let courtSlots = { c1: [], c2: [], w1: [], w2: [] };
+
+    function saveDataToDB() {
+      if(db) db.ref('badmintonData').set({ members, queue, courtSlots });
+    }
+
+    if(db) {
+      db.ref('badmintonData').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if(data) {
+          members = data.members || [];
+          queue = data.queue || [];
+          courtSlots = data.courtSlots || { c1: [], c2: [], w1: [], w2: [] };
+          renderMembers();
+          renderQueueAndCourts();
+        }
+      });
+    }
+
+    function enterAppWithLogin() {
+      const id = document.getElementById('landingId').value.trim();
+      const pw = document.getElementById('landingPw').value.trim();
+
+      if (id === 'admin' && pw === '1234') {
+        currentUser = { name: '운영진', isAdmin: true };
+      } else if (id) {
+        currentUser = { name: id, isAdmin: false };
+      } else {
+        alert('아이디 또는 이름을 입력해 주세요.');
+        return;
+      }
+      showMainApp();
+    }
+
+    function enterAppAsGuest() {
+      currentUser = null;
+      showMainApp();
+    }
+
+    function showMainApp() {
+      document.getElementById('landingScreen').style.display = 'none';
+      document.getElementById('mainAppScreen').style.display = 'block';
+      updateUserUI();
+    }
+
+    function goToLandingScreen() {
+      currentUser = null;
+      document.getElementById('landingId').value = '';
+      document.getElementById('landingPw').value = '';
+      document.getElementById('mainAppScreen').style.display = 'none';
+      document.getElementById('landingScreen').style.display = 'flex';
+    }
+
+    function openTab(evt, tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+
+    function updateUserUI() {
+      const label = document.getElementById('role-label');
+      const bar = document.getElementById('user-bar');
+      const adminAdd = document.getElementById('adminAddMember');
+      const btnC1 = document.getElementById('btnC1Win');
+      const btnC2 = document.getElementById('btnC2Win');
+      const adminBtns = document.querySelectorAll('.admin-only-btn');
+
+      if (currentUser) {
+        label.innerText = `${currentUser.name} (${currentUser.isAdmin ? '👑운영진' : '일반'})`;
+        bar.querySelector('.btn-logout').innerText = '로그아웃';
+      } else {
+        label.innerText = '비로그인';
+        bar.querySelector('.btn-logout').innerText = '로그인';
+      }
+
+      const isAdmin = currentUser && currentUser.isAdmin;
+      adminAdd.style.display = isAdmin ? 'block' : 'none';
+      btnC1.style.display = isAdmin ? 'inline' : 'none';
+      btnC2.style.display = isAdmin ? 'inline' : 'none';
+      adminBtns.forEach(el => el.style.display = isAdmin ? 'inline' : 'none');
+
+      renderMembers();
+      renderQueueAndCourts();
+    }
+
+    function toggleAttendance(id) {
+      if (!currentUser || !currentUser.isAdmin) {
+        alert('운영진 계정(admin)만 조작이 가능합니다.');
+        return;
+      }
+      const m = members.find(x => x.id === id);
+      if (!m) return;
+
+      m.isPresent = !m.isPresent;
+      if (m.isPresent) {
+        if (!queue.some(item => item.id === m.id)) {
+          queue.push({ id: m.id, name: m.name, gender: m.gender, level: m.level });
+        }
+      } else {
+        queue = queue.filter(item => item.id !== m.id);
+        for (let key in courtSlots) {
+          courtSlots[key] = courtSlots[key].filter(item => item.id !== m.id);
+        }
+      }
+      saveDataToDB();
+      renderMembers();
+      renderQueueAndCourts();
+    }
+
+    function addMember() {
+      const name = document.getElementById('newName').value.trim();
+      const gender = document.getElementById('newGender').value;
+      const level = document.getElementById('newLevel').value;
+      const role = document.getElementById('newRole').value;
+      if (!name) return alert('이름을 입력하세요.');
+
+      members.push({ id: Date.now(), name, gender, level, role, isPresent: false });
+      document.getElementById('newName').value = '';
+      saveDataToDB();
+      renderMembers();
+    }
+
+    function editMember(id) {
+      if (!currentUser || !currentUser.isAdmin) return;
+      const m = members.find(x => x.id === id);
+      if (!m) return;
+
+      const newName = prompt('수정할 이름을 입력하세요:', m.name);
+      if (newName === null) return;
+      
+      const newLevel = prompt('수정할 급수를 입력하세요 (예: 초심, D조, C조, B조, A조):', m.level);
+      if (newLevel === null) return;
+
+      m.name = newName.trim() || m.name;
+      m.level = newLevel.trim() || m.level;
+
+      const updateQueueItem = queue.find(q => q.id === id);
+      if(updateQueueItem) {
+        updateQueueItem.name = m.name;
+        updateQueueItem.level = m.level;
+      }
+      
+      saveDataToDB();
+      renderMembers();
+      renderQueueAndCourts();
+    }
+
+    function deleteMember(id) {
+      if (!currentUser || !currentUser.isAdmin) return;
+      const m = members.find(x => x.id === id);
+      if (!m) return;
+
+      if (confirm(`'${m.name}' 회원을 정말 삭제하시겠습니까?`)) {
+        members = members.filter(x => x.id !== id);
+        queue = queue.filter(x => x.id !== id);
+        for (let key in courtSlots) {
+          courtSlots[key] = courtSlots[key].filter(x => x.id !== id);
+        }
+        saveDataToDB();
+        renderMembers();
+        renderQueueAndCourts();
+      }
+    }
+
+    function moveMatch(fromMatchKey, targetCourtKey) {
+      if (!currentUser || !currentUser.isAdmin) return;
+      const sourceList = courtSlots[fromMatchKey];
+      if (!sourceList || sourceList.length === 0) return alert('이동할 회원이 없습니다.');
+
+      if (courtSlots[targetCourtKey].length > 0) {
+        courtSlots[targetCourtKey].forEach(item => queue.push(item));
+        courtSlots[targetCourtKey] = [];
+      }
+
+      courtSlots[targetCourtKey] = [...sourceList];
+      courtSlots[fromMatchKey] = [];
+      saveDataToDB();
+      renderQueueAndCourts();
+    }
+
+    function renderMembers() {
+      const isAdmin = currentUser && currentUser.isAdmin;
+      const tbody = document.getElementById('memberTableBody');
+      tbody.innerHTML = members.map(m => `
+        <tr>
+          <td><b>${m.name}</b></td>
+          <td>${m.gender}</td>
+          <td>${m.level}</td>
+          <td>
+            <span style="cursor:pointer;" onclick="${isAdmin ? `toggleAttendance(${m.id})` : ''}">
+              ${m.isPresent ? '🟢' : '🔴'}
+            </span>
+          </td>
+          <td>
+            ${isAdmin ? `
+              <button class="btn btn-edit" onclick="editMember(${m.id})">수정</button>
+              <button class="btn btn-danger" onclick="deleteMember(${m.id})">삭제</button>
+            ` : `
+              <button class="btn btn-disabled" disabled>권한없음</button>
+            `}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function formatMemberLabel(item) {
+      return `${item.name} (${item.gender}/${item.level})`;
+    }
+
+    function renderQueueAndCourts() {
+      const isAdmin = currentUser && currentUser.isAdmin;
+      const queueBox = document.getElementById('queueBox');
+      queueBox.innerHTML = queue.map(item => `
+        <div class="draggable-item" draggable="${isAdmin}" ondragstart="dragStart(event, ${item.id}, 'queue')">
+          <span>${formatMemberLabel(item)}</span>
+        </div>
+      `).join('') || '<span style="color:#88998a; font-size:0.8rem; width:100%; text-align:center;">출석 처리된 회원이 아래에 표시됩니다.</span>';
+
+      for (let key in courtSlots) {
+        const slotEl = document.getElementById(`slot-${key}`);
+        const list = courtSlots[key];
+        
+        slotEl.innerHTML = [0, 1, 2, 3].map(idx => {
+          const item = list[idx];
+          if (item) {
+            return `
+              <div class="draggable-item" style="background:#e0ede0; border-color:#a8c4a6;" draggable="${isAdmin}" ondragstart="dragStart(event, ${item.id}, '${key}')">
+                <span>${formatMemberLabel(item)}</span>
+              </div>
+            `;
+          } else {
+            return `<div style="border:1px dashed #c0cfbe; border-radius:4px; height:30px; display:flex; align-items:center; justify-content:center; color:#a0b09f; font-size:0.75rem;">빈 슬롯</div>`;
+          }
+        }).join('');
+      }
+    }
+
+    function allowDrop(ev) { if (currentUser && currentUser.isAdmin) ev.preventDefault(); }
+    function dragStart(ev, itemId, fromZone) {
+      if (!currentUser || !currentUser.isAdmin) return;
+      ev.dataTransfer.setData("text/plain", JSON.stringify({ itemId, fromZone }));
+    }
+    function dropToCourt(ev, courtKey) {
+      ev.preventDefault();
+      if (!currentUser || !currentUser.isAdmin) return;
+      const data = JSON.parse(ev.dataTransfer.getData("text/plain"));
+      if (courtSlots[courtKey].length >= 4) return alert('4명 정원이 찬 코트입니다.');
+
+      const item = removeFromZone(data.itemId, data.fromZone);
+      if (item) {
+        courtSlots[courtKey].push(item);
+        saveDataToDB();
+        renderQueueAndCourts();
+      }
+    }
+    function dropToQueue(ev) {
+      ev.preventDefault();
+      if (!currentUser || !currentUser.isAdmin) return;
+      const data = JSON.parse(ev.dataTransfer.getData("text/plain"));
+      if (data.fromZone === 'queue') return;
+
+      const item = removeFromZone(data.itemId, data.fromZone);
+      if (item) {
+        queue.push(item);
+        saveDataToDB();
+        renderQueueAndCourts();
+      }
+    }
+    function removeFromZone(itemId, fromZone) {
+      let removedItem = null;
+      if (fromZone === 'queue') {
+        removedItem = queue.find(i => i.id === itemId);
+        queue = queue.filter(i => i.id !== itemId);
+      } else if (courtSlots[fromZone]) {
+        removedItem = courtSlots[fromZone].find(i => i.id === itemId);
+        courtSlots[fromZone] = courtSlots[fromZone].filter(i => i.id !== itemId);
+      }
+      return removedItem;
+    }
+
+    function finishGame(courtKey) {
+      if (!courtSlots[courtKey] || courtSlots[courtKey].length === 0) return;
+      courtSlots[courtKey].forEach(item => queue.push(item));
+      courtSlots[courtKey] = [];
+      saveDataToDB();
+      renderQueueAndCourts();
+    }
+  </script>
+</body>
+</html>
