@@ -404,20 +404,28 @@
     }
 
     if(db) {
-      db.ref('badmintonData').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if(data) {
-          members = data.members || [];
-          queue = data.queue || [];
-          courtSlots = data.courtSlots || { c1: [], c2: [], w1: [], w2: [] };
-          
-          checkMidnightReset();
+  db.ref('badmintonData').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if(data) {
+      members = data.members || [];
+      queue = data.queue || [];
+      
+      // 코트 슬롯 각각이 undefined가 되지 않도록 안전하게 동기화
+      const fetchedSlots = data.courtSlots || {};
+      courtSlots = {
+        c1: fetchedSlots.c1 || [],
+        c2: fetchedSlots.c2 || [],
+        w1: fetchedSlots.w1 || [],
+        w2: fetchedSlots.w2 || []
+      };
+      
+      checkMidnightReset();
 
-          renderMembers();
-          renderQueueAndCourts();
-        }
-      });
+      renderMembers();
+      renderQueueAndCourts();
     }
+  });
+}
 
     function enterAppWithLogin() {
       const id = document.getElementById('landingId').value.trim();
@@ -561,23 +569,31 @@
       }
     }
 
-    function moveMemberToZone(itemId, fromZone, toZone) {
-      if (fromZone === toZone) return;
-      if (toZone !== 'queue' && courtSlots[toZone] && courtSlots[toZone].length >= 4) {
-        return alert('정원(4명)이 가득 찬 구역입니다.');
-      }
+function moveMemberToZone(itemId, fromZone, toZone) {
+  if (fromZone === toZone) return;
+  if (toZone !== 'queue' && courtSlots[toZone] && courtSlots[toZone].length >= 4) {
+    return alert('정원(4명)이 가득 찬 구역입니다.');
+  }
 
-      const item = removeFromZone(itemId, fromZone);
-      if (item) {
-        if (toZone === 'queue') {
-          queue.push(item);
-        } else if (courtSlots[toZone]) {
-          courtSlots[toZone].push(item);
-        }
-        renderQueueAndCourts();
-        saveDataToDB();
+  // 기존 구역에서 해당 유저 제거
+  const item = removeFromZone(itemId, fromZone);
+  
+  if (item) {
+    if (toZone === 'queue') {
+      queue.push(item);
+    } else if (courtSlots[toZone]) {
+      // 해당 코트 배열이 없으면 초기화 후 추가
+      if (!Array.isArray(courtSlots[toZone])) {
+        courtSlots[toZone] = [];
       }
+      courtSlots[toZone].push(item);
     }
+    
+    // 화면 갱신 및 DB 저장
+    renderQueueAndCourts();
+    saveDataToDB();
+  }
+}
 
     function moveMatch(fromMatchKey, targetCourtKey) {
       if (!currentUser || !currentUser.isAdmin) return alert('운영진만 이동이 가능합니다.');
