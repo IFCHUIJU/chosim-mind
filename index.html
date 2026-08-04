@@ -530,31 +530,32 @@
       if (item) {
         if (toZone === 'queue') queue.push(item);
         else courtSlots[toZone].push(item);
-        saveDataToDB();
         renderQueueAndCourts();
+        saveDataToDB();
       }
     }
 
-    /* ⚡ 이동 및 복사 방지 수정 로직 */
+    /* ⚡ 대기 매치 이동 완벽 보정 함수 (잔상 제거) */
     function moveMatch(fromMatchKey, targetCourtKey) {
       if (!currentUser || !currentUser.isAdmin) return alert('운영진만 이동이 가능합니다.');
       
       const sourceList = courtSlots[fromMatchKey];
       if (!sourceList || sourceList.length === 0) return alert('이동할 회원이 대기 매치에 없습니다.');
 
-      // 1. 코트에 이미 진행중인 회원이 존재하면 대기열(queue)로 내보냄
+      // 1. 코트에 이미 진행 중인 회원이 있으면 대기열(queue)로 내보냄
       if (courtSlots[targetCourtKey] && courtSlots[targetCourtKey].length > 0) {
         courtSlots[targetCourtKey].forEach(item => queue.push(item));
       }
 
-      // 2. 대기 매치의 선수들을 해당 코트로 완전히 이동시킴
-      courtSlots[targetCourtKey] = JSON.parse(JSON.stringify(sourceList));
+      // 2. 대기 매치의 회원을 코트로 복사 이동
+      courtSlots[targetCourtKey] = [...sourceList];
 
-      // 3. 기존 대기 매치 비우기 (복사 방지 핵심)
+      // 3. 출발지 대기 매치 배열을 완전히 비우기
       courtSlots[fromMatchKey] = [];
 
-      saveDataToDB();
+      // 4. 화면 즉시 다시 그리기 & DB 저장
       renderQueueAndCourts();
+      saveDataToDB();
     }
 
     function renderMembers() {
@@ -605,7 +606,7 @@
 
       for (let key in courtSlots) {
         const slotEl = document.getElementById(`slot-${key}`);
-        const list = courtSlots[key];
+        const list = courtSlots[key] || [];
         
         slotEl.innerHTML = [0, 1, 2, 3].map(idx => {
           const item = list[idx];
@@ -684,7 +685,7 @@
       if (!touchClone) return;
       
       const touch = e.changedTouches[0];
-      targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
+      const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
 
       document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
       touchClone.remove();
@@ -726,8 +727,8 @@
       if (!courtSlots[courtKey] || courtSlots[courtKey].length === 0) return;
       courtSlots[courtKey].forEach(item => queue.push(item));
       courtSlots[courtKey] = [];
-      saveDataToDB();
       renderQueueAndCourts();
+      saveDataToDB();
     }
   </script>
 </body>
