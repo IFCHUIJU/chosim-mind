@@ -28,7 +28,7 @@
       --border: #cee0cc;
       --border-soft: #e3ede2;
     }
-* { box-sizing: border-box; }
+    * { box-sizing: border-box; }
     body { font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
     #queueBox { touch-action: pan-y !important; -webkit-overflow-scrolling: touch; }
     
@@ -171,7 +171,7 @@
 
 /* 🙋‍♂️ 대기자 박스 - 스크롤 막힘 방지 최적화 */
 #queueBox {
-  height: 300px; /* 카드가 살짝 잘려 보이게 높이 조정해 스크롤 존재 유무 직관화 */
+  height: 300px;
   overflow-y: auto; 
   background: #f0f4ef; 
   padding: 8px; 
@@ -180,7 +180,7 @@
   display: flex; 
   flex-direction: column; 
   gap: 5px; 
-  touch-action: auto !important; /* 스크롤이 먹통 되지 않게 터치 동작 허용 */
+  touch-action: auto !important;
   -webkit-overflow-scrolling: touch; 
   scrollbar-width: thin;
   scrollbar-color: var(--accent) #e3ede2;
@@ -302,13 +302,13 @@
           </div>
         </div>
 
-	<table>
+        <table>
           <thead>
             <tr>
               <th>이름</th>
               <th>성별</th>
               <th>급수</th>
-              <th>구분</th> <!-- ✨ 추가됨 -->
+              <th>구분</th>
               <th>출석</th>
               <th>관리</th>
             </tr>
@@ -318,7 +318,7 @@
       </div>
     </div>
 
-<!-- TAB 3: 코트 및 대기열 -->
+    <!-- TAB 3: 코트 및 대기열 -->
     <div id="gameTab" class="tab-content">
       <div class="board-container">
         
@@ -371,14 +371,15 @@
           </div>
         </div>
 
-<!-- [오른쪽 열] 대기자 목록 -->
-<div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)" style="padding:8px; margin-bottom:0; position:sticky; top:10px;">
-  <h3 style="margin: 0 0 6px 0; font-size: 0.85rem; color:var(--primary);">🙋‍♂️ 대기자 <span style="font-size:0.7rem; font-weight:normal; color:#666;">(↕ 스크롤)</span></h3>
-  <div id="queueBox"></div>
-</div>
+        <!-- [오른쪽 열] 대기자 목록 -->
+        <div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)" style="padding:8px; margin-bottom:0; position:sticky; top:10px;">
+          <h3 style="margin: 0 0 6px 0; font-size: 0.85rem; color:var(--primary);">🙋‍♂️ 대기자 <span style="font-size:0.7rem; font-weight:normal; color:#666;">(↕ 스크롤)</span></h3>
+          <div id="queueBox"></div>
+        </div>
 
       </div>
     </div>
+  </div>
 
   <script>
     // 🔥 Firebase 설정
@@ -447,28 +448,27 @@
     }
 
     if(db) {
-  db.ref('badmintonData').on('value', (snapshot) => {
-    const data = snapshot.val();
-    if(data) {
-      members = data.members || [];
-      queue = data.queue || [];
-      
-      // 코트 슬롯 각각이 undefined가 되지 않도록 안전하게 동기화
-      const fetchedSlots = data.courtSlots || {};
-      courtSlots = {
-        c1: fetchedSlots.c1 || [],
-        c2: fetchedSlots.c2 || [],
-        w1: fetchedSlots.w1 || [],
-        w2: fetchedSlots.w2 || []
-      };
-      
-      checkMidnightReset();
+      db.ref('badmintonData').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if(data) {
+          members = data.members || [];
+          queue = data.queue || [];
+          
+          const fetchedSlots = data.courtSlots || {};
+          courtSlots = {
+            c1: fetchedSlots.c1 || [],
+            c2: fetchedSlots.c2 || [],
+            w1: fetchedSlots.w1 || [],
+            w2: fetchedSlots.w2 || []
+          };
+          
+          checkMidnightReset();
 
-      renderMembers();
-      renderQueueAndCourts();
+          renderMembers();
+          renderQueueAndCourts();
+        }
+      });
     }
-  });
-}
 
     function enterAppWithLogin() {
       const id = document.getElementById('landingId').value.trim();
@@ -533,7 +533,7 @@
       renderQueueAndCourts();
     }
 
-function toggleAttendance(id) {
+    function toggleAttendance(id) {
       if (!currentUser || !currentUser.isAdmin) {
         alert('운영진만 조작이 가능합니다.');
         return;
@@ -570,7 +570,6 @@ function toggleAttendance(id) {
       renderMembers();
     }
 
-// 1. 수정 팝업 창 열기
     function editMember(id) {
       if (!currentUser || !currentUser.isAdmin) return alert('운영진만 수정 가능합니다.');
       const m = members.find(x => x.id === id);
@@ -584,7 +583,6 @@ function toggleAttendance(id) {
       document.getElementById('editMemberModal').style.display = 'flex';
     }
 
-    // 2. 수정 내용 저장하기
     function saveEditMember() {
       const id = Number(document.getElementById('editMemberId').value);
       const m = members.find(x => x.id === id);
@@ -597,7 +595,6 @@ function toggleAttendance(id) {
       m.level = document.getElementById('editLevel').value;
       m.role = document.getElementById('editRole').value;
 
-      // 대기열이나 코트에 들어가 있는 회원의 정보도 함께 갱신
       const updateQueueItem = queue.find(q => q.id === id);
       if (updateQueueItem) {
         updateQueueItem.name = m.name;
@@ -620,7 +617,6 @@ function toggleAttendance(id) {
       closeEditModal();
     }
 
-    // 3. 수정 팝업 창 닫기
     function closeEditModal() {
       document.getElementById('editMemberModal').style.display = 'none';
     }
@@ -642,46 +638,41 @@ function toggleAttendance(id) {
       }
     }
 
-function moveMemberToZone(itemId, fromZone, toZone) {
-  if (fromZone === toZone) return;
-  if (toZone !== 'queue' && courtSlots[toZone] && courtSlots[toZone].length >= 4) {
-    return alert('정원(4명)이 가득 찬 구역입니다.');
-  }
-
-  // 기존 구역에서 해당 유저 제거
-  const item = removeFromZone(itemId, fromZone);
-  
-  if (item) {
-    if (toZone === 'queue') {
-      queue.push(item);
-    } else if (courtSlots[toZone]) {
-      // 해당 코트 배열이 없으면 초기화 후 추가
-      if (!Array.isArray(courtSlots[toZone])) {
-        courtSlots[toZone] = [];
+    function moveMemberToZone(itemId, fromZone, toZone) {
+      if (fromZone === toZone) return;
+      if (toZone !== 'queue' && courtSlots[toZone] && courtSlots[toZone].length >= 4) {
+        return alert('정원(4명)이 가득 찬 구역입니다.');
       }
-      courtSlots[toZone].push(item);
-    }
-    
-    // 화면 갱신 및 DB 저장
-    renderQueueAndCourts();
-    saveDataToDB();
-  }
-}
 
-function moveMatch(fromMatchKey, targetCourtKey) {
+      const item = removeFromZone(itemId, fromZone);
+      
+      if (item) {
+        if (toZone === 'queue') {
+          queue.push(item);
+        } else if (courtSlots[toZone]) {
+          if (!Array.isArray(courtSlots[toZone])) {
+            courtSlots[toZone] = [];
+          }
+          courtSlots[toZone].push(item);
+        }
+        
+        renderQueueAndCourts();
+        saveDataToDB();
+      }
+    }
+
+    function moveMatch(fromMatchKey, targetCourtKey) {
       if (!currentUser || !currentUser.isAdmin) return alert('운영진만 이동이 가능합니다.');
       
       const sourceList = courtSlots[fromMatchKey];
       if (!sourceList || sourceList.length === 0) return alert('이동할 회원이 대기 매치에 없습니다.');
 
-      // 🛑 [수정된 부분] 코트에 이미 사람이 있는 경우 이동 차단
       const targetList = courtSlots[targetCourtKey] || [];
       if (targetList.length > 0) {
         const courtName = targetCourtKey === 'c1' ? '1코트' : '2코트';
         return alert(`현재 ${courtName}에 진행 중인 게임이 있습니다.\n게임을 종료한 후 이동해 주세요!`);
       }
 
-      // 코트가 완전히 비어있을 때만 이동 수행
       courtSlots[targetCourtKey] = [...sourceList];
       courtSlots[fromMatchKey] = [];
 
@@ -689,7 +680,7 @@ function moveMatch(fromMatchKey, targetCourtKey) {
       saveDataToDB();
     }
 
-function renderMembers() {
+    function renderMembers() {
       const isAdmin = currentUser && currentUser.isAdmin;
       const tbody = document.getElementById('memberTableBody');
       tbody.innerHTML = members.map(m => `
@@ -715,47 +706,44 @@ function renderMembers() {
       `).join('');
     }
 
-function formatMemberLabel(item) {
+    function formatMemberLabel(item) {
       const roleTag = item.role === '게스트' ? '🎈게스트/' : '';
       return `${item.name} (${roleTag}${item.level})`;
     }
 
-function renderQueueAndCourts() {
-  const isAdmin = currentUser && currentUser.isAdmin;
-  const queueBox = document.getElementById('queueBox');
-  
-  // 🙋‍♂️ 대기자 목록 (아이콘 표시 제거)
-  queueBox.innerHTML = queue.map(item => `
-    <div class="draggable-item" 
-         style="justify-content: center; padding: 8px 10px;"
-         data-id="${item.id}"
-         data-from="queue">
-      <span>${formatMemberLabel(item)}</span>
-    </div>
-  `).join('') || '<span style="color:#788c7b; font-size:0.8rem; width:100%; text-align:center; padding:15px 0;">출석 처리된 회원이 없습니다.</span>';
+    function renderQueueAndCourts() {
+      const queueBox = document.getElementById('queueBox');
+      
+      queueBox.innerHTML = queue.map(item => `
+        <div class="draggable-item" 
+             style="justify-content: center; padding: 8px 10px;"
+             data-id="${item.id}"
+             data-from="queue">
+          <span>${formatMemberLabel(item)}</span>
+        </div>
+      `).join('') || '<span style="color:#788c7b; font-size:0.8rem; width:100%; text-align:center; padding:15px 0;">출석 처리된 회원이 없습니다.</span>';
 
-  // 🏟️ 코트 및 대기 매치 (아이콘 표시 제거)
-  for (let key in courtSlots) {
-    const slotEl = document.getElementById(`slot-${key}`);
-    const list = courtSlots[key] || [];
-    
-    slotEl.innerHTML = [0, 1, 2, 3].map(idx => {
-      const item = list[idx];
-      if (item) {
-        return `
-          <div class="draggable-item" 
-               style="background:#3a5c41; border-color:#1e3d24; justify-content: center; padding: 6px 8px;" 
-               data-id="${item.id}"
-               data-from="${key}">
-            <span style="font-size:0.75rem;">${formatMemberLabel(item)}</span>
-          </div>
-        `;
-      } else {
-        return `<div style="border:1.5px dashed #c1d1c3; border-radius:10px; height:38px; display:flex; align-items:center; justify-content:center; color:#889e8a; font-size:0.75rem; background:#fafcf9;">빈 슬롯</div>`;
+      for (let key in courtSlots) {
+        const slotEl = document.getElementById(`slot-${key}`);
+        const list = courtSlots[key] || [];
+        
+        slotEl.innerHTML = [0, 1, 2, 3].map(idx => {
+          const item = list[idx];
+          if (item) {
+            return `
+              <div class="draggable-item" 
+                   style="background:#3a5c41; border-color:#1e3d24; justify-content: center; padding: 6px 8px;" 
+                   data-id="${item.id}"
+                   data-from="${key}">
+                <span style="font-size:0.75rem;">${formatMemberLabel(item)}</span>
+              </div>
+            `;
+          } else {
+            return `<div style="border:1.5px dashed #c1d1c3; border-radius:10px; height:38px; display:flex; align-items:center; justify-content:center; color:#889e8a; font-size:0.75rem; background:#fafcf9;">빈 슬롯</div>`;
+          }
+        }).join('');
       }
-    }).join('');
-  }
-}
+    }
 
     /* 🖥️ PC 드래그 & 드롭 Engine */
     function allowDrop(ev) { if (currentUser && currentUser.isAdmin) ev.preventDefault(); }
@@ -784,87 +772,75 @@ function renderQueueAndCourts() {
       moveMemberToZone(Number(data.itemId), data.fromZone, 'queue');
     }
 
-/* 📱 렉 및 프레임 드랍 제로 터치 엔진 */
-let touchedEl = null;
-let touchClone = null;
-let startX = 0;
-let startY = 0;
-let isDragging = false;
+    /* 📱 렉 및 프레임 드랍 제로 터치 엔진 */
+    let touchedEl = null;
+    let touchClone = null;
+    let startX = 0;
+    let startY = 0;
+    let isDragging = false;
 
-function touchStart(e, itemId, fromZone) {
-  if (!currentUser || !currentUser.isAdmin) return;
-  
-  const touch = e.touches[0];
-  startX = touch.clientX;
-  startY = touch.clientY;
-  isDragging = false;
-  
-  touchedEl = e.currentTarget.closest('.draggable-item');
-}
+    function touchStart(e, itemId, fromZone) {
+      if (!currentUser || !currentUser.isAdmin) return;
+      
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      isDragging = false;
+      
+      touchedEl = e.currentTarget.closest('.draggable-item');
+    }
 
-function touchMove(e) {
-  if (!touchedEl) return;
-  
-  const touch = e.touches[0];
-  const moveX = Math.abs(touch.clientX - startX);
-  const moveY = Math.abs(touch.clientY - startY);
+    function touchMove(e) {
+      if (!touchedEl) return;
+      
+      const touch = e.touches[0];
+      const moveX = Math.abs(touch.clientX - startX);
+      const moveY = Math.abs(touch.clientY - startY);
 
-  if (!isDragging) {
-    if (moveY > 5 && moveY > moveX) {
+      if (!isDragging) {
+        if (moveY > 5 && moveY > moveX) {
+          touchedEl = null;
+          return;
+        }
+        
+        if (moveX > 8 || moveY > 8) {
+          isDragging = true;
+          touchClone = touchedEl.cloneNode(true);
+          touchClone.classList.add('dragging-touch');
+          document.body.appendChild(touchClone);
+        }
+      }
+
+      if (isDragging && touchClone) {
+        if (e.cancelable) e.preventDefault();
+        updateClonePosition(touch);
+
+        const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
+        document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
+        if (targetZone) {
+          const cardEl = document.querySelector(`[data-zone="${targetZone}"]`);
+          if (cardEl) cardEl.classList.add('drag-over');
+        }
+      }
+    }
+
+    function touchEnd(e, itemId, fromZone) {
+      if (isDragging && touchClone) {
+        const touch = e.changedTouches[0];
+        const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
+
+        document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
+        touchClone.remove();
+
+        if (targetZone && targetZone !== fromZone) {
+          moveMemberToZone(Number(itemId), fromZone, targetZone);
+        }
+      }
+
+      touchClone = null;
       touchedEl = null;
-      return;
+      isDragging = false;
     }
-    
-    if (moveX > 8 || moveY > 8) {
-      isDragging = true;
-      touchClone = touchedEl.cloneNode(true);
-      touchClone.classList.add('dragging-touch');
-      document.body.appendChild(touchClone);
-    }
-  }
-
-  if (isDragging && touchClone) {
-    if (e.cancelable) e.preventDefault();
-    updateClonePosition(touch);
-
-    const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
-    document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
-    if (targetZone) {
-      const cardEl = document.querySelector(`[data-zone="${targetZone}"]`);
-      if (cardEl) cardEl.classList.add('drag-over');
-    }
-  }
-}
-
-function touchEnd(e, itemId, fromZone) {
-  if (isDragging && touchClone) {
-    const touch = e.changedTouches[0];
-    const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
-
-    document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
-    touchClone.remove();
-
-    if (targetZone && targetZone !== fromZone) {
-      moveMemberToZone(Number(itemId), fromZone, targetZone);
-    }
-  }
-
-  touchClone = null;
-  touchedEl = null;
-  isDragging = false;
-}
-  const touch = e.changedTouches[0];
-  const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
-
-  document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
-  touchClone.remove();
-  touchClone = null;
-  touchedEl = null;
-
-  if (targetZone && targetZone !== fromZone) {
-    moveMemberToZone(Number(itemId), fromZone, targetZone);
-  }
-}
 
     function updateClonePosition(touch) {
       if (touchClone) {
@@ -901,7 +877,7 @@ function touchEnd(e, itemId, fromZone) {
     }
   </script>
 
-<!-- 🛠️ 회원 정보 수정 모달 팝업 -->
+  <!-- 🛠️ 회원 정보 수정 모달 팝업 -->
   <div id="editMemberModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; padding:20px;">
     <div style="background:#fff; width:100%; max-width:320px; padding:20px; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
       <h3 style="margin-top:0; color:var(--primary); font-size:1.1rem; margin-bottom:15px;">✏️ 회원 정보 수정</h3>
