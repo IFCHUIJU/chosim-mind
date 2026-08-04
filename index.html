@@ -278,29 +278,29 @@
       <div class="board-container">
         <div class="drop-zone-container">
           <!-- 1코트 -->
-          <div class="drop-card" data-zone="c1">
+          <div class="drop-card" data-zone="c1" ondrop="dropToCourt(event, 'c1')" ondragover="allowDrop(event)">
             <div class="drop-title">
               <span>🏟️ 1코트 (진행)</span>
               <span id="btnC1Win" class="admin-only" style="display:none;">
                 <button class="btn btn-danger" style="font-size:0.65rem; padding:3px 6px;" onclick="finishGame('c1')">게임 종료</button>
               </span>
             </div>
-            <div class="slots" id="slot-c1" ondrop="dropToCourt(event, 'c1')" ondragover="allowDrop(event)"></div>
+            <div class="slots" id="slot-c1"></div>
           </div>
 
           <!-- 2코트 -->
-          <div class="drop-card" data-zone="c2">
+          <div class="drop-card" data-zone="c2" ondrop="dropToCourt(event, 'c2')" ondragover="allowDrop(event)">
             <div class="drop-title">
               <span>🏟️ 2코트 (진행)</span>
               <span id="btnC2Win" class="admin-only" style="display:none;">
                 <button class="btn btn-danger" style="font-size:0.65rem; padding:3px 6px;" onclick="finishGame('c2')">게임 종료</button>
               </span>
             </div>
-            <div class="slots" id="slot-c2" ondrop="dropToCourt(event, 'c2')" ondragover="allowDrop(event)"></div>
+            <div class="slots" id="slot-c2"></div>
           </div>
 
           <!-- 대기 1 매치 -->
-          <div class="drop-card" data-zone="w1">
+          <div class="drop-card" data-zone="w1" ondrop="dropToCourt(event, 'w1')" ondragover="allowDrop(event)">
             <div class="drop-title">
               <span>⏱️ 대기 1 매치</span>
               <span class="admin-only" style="display:none;">
@@ -308,11 +308,11 @@
                 <button class="btn btn-action" style="font-size:0.65rem; padding:3px 6px;" onclick="moveMatch('w1', 'c2')">⚡2코트이동</button>
               </span>
             </div>
-            <div class="slots" id="slot-w1" ondrop="dropToCourt(event, 'w1')" ondragover="allowDrop(event)"></div>
+            <div class="slots" id="slot-w1"></div>
           </div>
 
           <!-- 대기 2 매치 -->
-          <div class="drop-card" data-zone="w2">
+          <div class="drop-card" data-zone="w2" ondrop="dropToCourt(event, 'w2')" ondragover="allowDrop(event)">
             <div class="drop-title">
               <span>⏱️ 대기 2 매치</span>
               <span class="admin-only" style="display:none;">
@@ -320,17 +320,17 @@
                 <button class="btn btn-action" style="font-size:0.65rem; padding:3px 6px;" onclick="moveMatch('w2', 'c2')">⚡2코트이동</button>
               </span>
             </div>
-            <div class="slots" id="slot-w2" ondrop="dropToCourt(event, 'w2')" ondragover="allowDrop(event)"></div>
+            <div class="slots" id="slot-w2"></div>
           </div>
         </div>
 
         <!-- 대기열 카드 -->
-        <div class="card" data-zone="queue">
+        <div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)">
           <h3 style="margin: 0 0 4px 0; font-size: 0.95rem; color:var(--primary);">🙋‍♂️ 대기열 (출석자)</h3>
           <p style="font-size:0.75rem; color:#5c6e5e; margin-top:0; margin-bottom:8px;">
             👆 <b>운영진 기능:</b> 이름 태그를 눌러 원하는 코트로 드래그하세요!
           </p>
-          <div id="queueBox" ondrop="dropToQueue(event)" ondragover="allowDrop(event)"></div>
+          <div id="queueBox"></div>
         </div>
 
       </div>
@@ -362,6 +362,43 @@
     let queue = [];
     let courtSlots = { c1: [], c2: [], w1: [], w2: [] };
 
+    // 🕛 자정 리셋 로직
+    function getTodayString() {
+      const now = new Date();
+      return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+    }
+
+    function checkMidnightReset() {
+      const today = getTodayString();
+      const lastResetDate = localStorage.getItem('lastResetDate');
+
+      if (lastResetDate !== today) {
+        resetAllAttendance();
+        localStorage.setItem('lastResetDate', today);
+      }
+    }
+
+    function resetAllAttendance() {
+      let isChanged = false;
+
+      members.forEach(m => {
+        if (m.isPresent) {
+          m.isPresent = false;
+          isChanged = true;
+        }
+      });
+
+      if (isChanged || queue.length > 0 || courtSlots.c1.length > 0 || courtSlots.c2.length > 0 || courtSlots.w1.length > 0 || courtSlots.w2.length > 0) {
+        queue = [];
+        courtSlots = { c1: [], c2: [], w1: [], w2: [] };
+        saveDataToDB();
+        renderMembers();
+        renderQueueAndCourts();
+      }
+    }
+
+    setInterval(checkMidnightReset, 60000);
+
     function saveDataToDB() {
       if(db) db.ref('badmintonData').set({ members, queue, courtSlots });
     }
@@ -373,6 +410,9 @@
           members = data.members || [];
           queue = data.queue || [];
           courtSlots = data.courtSlots || { c1: [], c2: [], w1: [], w2: [] };
+          
+          checkMidnightReset();
+
           renderMembers();
           renderQueueAndCourts();
         }
@@ -522,38 +562,36 @@
     }
 
     function moveMemberToZone(itemId, fromZone, toZone) {
-      if (toZone !== 'queue' && courtSlots[toZone].length >= 4) {
+      if (fromZone === toZone) return;
+      if (toZone !== 'queue' && courtSlots[toZone] && courtSlots[toZone].length >= 4) {
         return alert('정원(4명)이 가득 찬 구역입니다.');
       }
 
       const item = removeFromZone(itemId, fromZone);
       if (item) {
-        if (toZone === 'queue') queue.push(item);
-        else courtSlots[toZone].push(item);
+        if (toZone === 'queue') {
+          queue.push(item);
+        } else if (courtSlots[toZone]) {
+          courtSlots[toZone].push(item);
+        }
         renderQueueAndCourts();
         saveDataToDB();
       }
     }
 
-    /* ⚡ 대기 매치 이동 완벽 보정 함수 (잔상 제거) */
     function moveMatch(fromMatchKey, targetCourtKey) {
       if (!currentUser || !currentUser.isAdmin) return alert('운영진만 이동이 가능합니다.');
       
       const sourceList = courtSlots[fromMatchKey];
       if (!sourceList || sourceList.length === 0) return alert('이동할 회원이 대기 매치에 없습니다.');
 
-      // 1. 코트에 이미 진행 중인 회원이 있으면 대기열(queue)로 내보냄
       if (courtSlots[targetCourtKey] && courtSlots[targetCourtKey].length > 0) {
         courtSlots[targetCourtKey].forEach(item => queue.push(item));
       }
 
-      // 2. 대기 매치의 회원을 코트로 복사 이동
       courtSlots[targetCourtKey] = [...sourceList];
-
-      // 3. 출발지 대기 매치 배열을 완전히 비우기
       courtSlots[fromMatchKey] = [];
 
-      // 4. 화면 즉시 다시 그리기 & DB 저장
       renderQueueAndCourts();
       saveDataToDB();
     }
@@ -631,27 +669,34 @@
       }
     }
 
-    /* 🖥️ PC 드래그 & 드롭 */
+    /* 🖥️ PC 드래그 & 드롭 Engine */
     function allowDrop(ev) { if (currentUser && currentUser.isAdmin) ev.preventDefault(); }
+    
     function dragStart(ev, itemId, fromZone) {
       if (!currentUser || !currentUser.isAdmin) return;
       ev.dataTransfer.setData("text/plain", JSON.stringify({ itemId, fromZone }));
     }
+
     function dropToCourt(ev, courtKey) {
       ev.preventDefault();
       if (!currentUser || !currentUser.isAdmin) return;
-      const data = JSON.parse(ev.dataTransfer.getData("text/plain"));
-      moveMemberToZone(data.itemId, data.fromZone, courtKey);
+      const rawData = ev.dataTransfer.getData("text/plain");
+      if(!rawData) return;
+      const data = JSON.parse(rawData);
+      moveMemberToZone(Number(data.itemId), data.fromZone, courtKey);
     }
+
     function dropToQueue(ev) {
       ev.preventDefault();
       if (!currentUser || !currentUser.isAdmin) return;
-      const data = JSON.parse(ev.dataTransfer.getData("text/plain"));
+      const rawData = ev.dataTransfer.getData("text/plain");
+      if(!rawData) return;
+      const data = JSON.parse(rawData);
       if (data.fromZone === 'queue') return;
-      moveMemberToZone(data.itemId, data.fromZone, 'queue');
+      moveMemberToZone(Number(data.itemId), data.fromZone, 'queue');
     }
 
-    /* 📱 모바일 터치 드래그 & 드롭 엔진 */
+    /* 📱 모바일 터치 드래그 & 드롭 Engine */
     let touchedEl = null;
     let touchClone = null;
 
@@ -693,7 +738,7 @@
       touchedEl = null;
 
       if (targetZone && targetZone !== fromZone) {
-        moveMemberToZone(itemId, fromZone, targetZone);
+        moveMemberToZone(Number(itemId), fromZone, targetZone);
       }
     }
 
