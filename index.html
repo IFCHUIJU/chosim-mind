@@ -809,14 +809,12 @@ function touchMove(e) {
   const moveX = Math.abs(touch.clientX - startX);
   const moveY = Math.abs(touch.clientY - startY);
 
-  // 1. 아직 드래그 상태가 아닌데 손가락이 위아래로 움직이면 즉시 드래그 포기 (부드러운 스크롤 보장)
   if (!isDragging) {
     if (moveY > 5 && moveY > moveX) {
-      touchedEl = null; // 터치 추적 해제 -> 브라우저 기본 네이티브 스크롤로 구동
+      touchedEl = null;
       return;
     }
     
-    // 옆으로 끌거나 꾹 눌러 일정 이상 움직였을 때 드래그 시작
     if (moveX > 8 || moveY > 8) {
       isDragging = true;
       touchClone = touchedEl.cloneNode(true);
@@ -825,7 +823,6 @@ function touchMove(e) {
     }
   }
 
-  // 2. 드래그 중일 때만 스크롤을 막고 위치 업데이트
   if (isDragging && touchClone) {
     if (e.cancelable) e.preventDefault();
     updateClonePosition(touch);
@@ -852,12 +849,10 @@ function touchEnd(e, itemId, fromZone) {
     }
   }
 
-  // 변수 초기화
   touchClone = null;
   touchedEl = null;
   isDragging = false;
 }
-  
   const touch = e.changedTouches[0];
   const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
 
