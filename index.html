@@ -146,10 +146,11 @@
       box-shadow: 0 10px 20px rgba(0,0,0,0.25) !important;
     }
 
-    #queueBox {
-      min-height: 100px; 
+#queueBox {
+      max-height: 140px; /* 대기자가 많아지면 내부에서 스크롤되도록 고정 */
+      overflow-y: auto;
       background: #f0f4ef; 
-      padding: 12px; 
+      padding: 10px; 
       border-radius: 14px; 
       border: 1.5px solid var(--border); 
       display: flex; 
@@ -272,9 +273,17 @@
       </div>
     </div>
 
-    <!-- TAB 3: 코트 및 대기열 -->
+<!-- TAB 3: 코트 및 대기열 -->
     <div id="gameTab" class="tab-content">
       <div class="board-container">
+
+        <!-- 🙋‍♂️ 대기자 목록 (상단 배치) -->
+        <div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)" style="margin-bottom: 12px; position: sticky; top: 0; z-index: 100;">
+          <h3 style="margin: 0 0 6px 0; font-size: 0.95rem; color:var(--primary);">🙋‍♂️ 대기자 목록</h3>
+          <div id="queueBox"></div>
+        </div>
+
+        <!-- 🏟️ 코트 및 대기 매치 -->
         <div class="drop-zone-container">
           <!-- 1코트 -->
           <div class="drop-card" data-zone="c1" ondrop="dropToCourt(event, 'c1')" ondragover="allowDrop(event)">
@@ -322,6 +331,9 @@
             <div class="slots" id="slot-w2"></div>
           </div>
         </div>
+
+      </div>
+    </div>
 
         <!-- 대기열 카드 -->
         <div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)">
