@@ -28,8 +28,8 @@
       --border: #cee0cc;
       --border-soft: #e3ede2;
     }
-    * { box-sizing: border-box; }
-    body { font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    * { box-sizing: border-box; touch-action: manipulation; }
+    body { font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
     
     /* Landing Screen */
     #landingScreen {
@@ -114,11 +114,12 @@
     /* Board Layout */
     .board-container { display: flex; flex-direction: column; gap: 12px; }
     .drop-zone-container { display: flex; flex-direction: column; gap: 10px; }
-    .drop-card { background: #fff; border: 1.5px dashed var(--accent-soft); border-radius: 14px; padding: 12px; }
+    .drop-card { background: #fff; border: 1.5px dashed var(--accent-soft); border-radius: 14px; padding: 12px; transition: background 0.2s; }
+    .drop-card.drag-over { background: #e8f0e7; border-color: var(--primary); }
     .drop-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 10px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
     .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; min-height: 60px; }
     
-    /* 🎨 시각적 선명함을 극대화한 회원 이름 태그 (버튼 방식 지원) */
+    /* 🎨 시각적 선명함 + 모바일 터치 드래그 지원 태그 */
     .draggable-item { 
       background: var(--primary); 
       border: 1px solid #142819; 
@@ -126,7 +127,7 @@
       padding: 10px 14px; 
       border-radius: 12px; 
       font-size: 0.85rem; 
-      cursor: pointer; 
+      cursor: grab; 
       display: inline-flex; 
       align-items: center; 
       justify-content: center; 
@@ -135,11 +136,17 @@
       text-align: center; 
       font-weight: 700; 
       box-shadow: 0 3px 6px rgba(0,0,0,0.12);
-      transition: transform 0.1s, background 0.2s;
+      touch-action: none;
     }
-    .draggable-item:active { transform: scale(0.96); opacity: 0.9; }
+    .draggable-item.dragging-touch {
+      position: fixed !important;
+      z-index: 9999 !important;
+      opacity: 0.9 !important;
+      transform: scale(1.05) !important;
+      pointer-events: none !important;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.25) !important;
+    }
 
-    /* 대기열 내부 슬롯 배경도 선명하게 선을 그어줌 */
     #queueBox {
       min-height: 100px; 
       background: #f0f4ef; 
@@ -272,7 +279,7 @@
       <div class="board-container">
         <div class="drop-zone-container">
           <!-- 1코트 -->
-          <div class="drop-card">
+          <div class="drop-card" data-zone="c1">
             <div class="drop-title">
               <span>🏟️ 1코트 (진행)</span>
               <span id="btnC1Win" style="display:none;">
@@ -283,7 +290,7 @@
           </div>
 
           <!-- 2코트 -->
-          <div class="drop-card">
+          <div class="drop-card" data-zone="c2">
             <div class="drop-title">
               <span>🏟️ 2코트 (진행)</span>
               <span id="btnC2Win" style="display:none;">
@@ -294,7 +301,7 @@
           </div>
 
           <!-- 대기 1 매치 -->
-          <div class="drop-card">
+          <div class="drop-card" data-zone="w1">
             <div class="drop-title">
               <span>⏱️ 대기 1 매치</span>
               <span class="admin-only-btn" style="display:none;">
@@ -306,7 +313,7 @@
           </div>
 
           <!-- 대기 2 매치 -->
-          <div class="drop-card">
+          <div class="drop-card" data-zone="w2">
             <div class="drop-title">
               <span>⏱️ 대기 2 매치</span>
               <span class="admin-only-btn" style="display:none;">
@@ -319,11 +326,10 @@
         </div>
 
         <!-- 대기열 카드 -->
-        <div class="card">
+        <div class="card" data-zone="queue">
           <h3 style="margin: 0 0 4px 0; font-size: 0.95rem; color:var(--primary);">🙋‍♂️ 대기열 (출석자)</h3>
           <p style="font-size:0.75rem; color:#5c6e5e; margin-top:0; margin-bottom:8px;">
-            💡 <b>모바일:</b> 이름 터치 후 이동할 위치 선택<br>
-            💡 <b>PC:</b> 드래그 앤 드롭으로 이동 가능
+            👆 <b>운영진 기능:</b> 이름 태그를 눌러 원하는 코트로 드래그하세요!
           </p>
           <div id="queueBox" ondrop="dropToQueue(event)" ondragover="allowDrop(event)"></div>
         </div>
@@ -486,7 +492,7 @@
       const newName = prompt('수정할 이름을 입력하세요:', m.name);
       if (newName === null) return;
       
-      const newLevel = prompt('수정할 급수를 입력하세요 (예: 초심, D조, C조, B조, A조):', m.level);
+      const newLevel = prompt('수정할 급수를 입력하세요:', m.level);
       if (newLevel === null) return;
 
       m.name = newName.trim() || m.name;
@@ -517,24 +523,6 @@
         saveDataToDB();
         renderMembers();
         renderQueueAndCourts();
-      }
-    }
-
-    /* 📱 스마트폰용 원터치 이동 메뉴 구현 */
-    function handleMemberClick(itemId, currentZone) {
-      if (!currentUser || !currentUser.isAdmin) return;
-
-      let targetChoice;
-      if (currentZone === 'queue') {
-        targetChoice = prompt(`'이동할 위치를 입력하세요:\n\n1: 1코트\n2: 2코트\n3: 대기1 매치\n4: 대기2 매치`);
-        if (targetChoice === '1') moveMemberToZone(itemId, 'queue', 'c1');
-        else if (targetChoice === '2') moveMemberToZone(itemId, 'queue', 'c2');
-        else if (targetChoice === '3') moveMemberToZone(itemId, 'queue', 'w1');
-        else if (targetChoice === '4') moveMemberToZone(itemId, 'queue', 'w2');
-      } else {
-        if (confirm(`해당 회원을 대기열로 복귀시키겠습니까?`)) {
-          moveMemberToZone(itemId, currentZone, 'queue');
-        }
       }
     }
 
@@ -601,17 +589,19 @@
       const isAdmin = currentUser && currentUser.isAdmin;
       const queueBox = document.getElementById('queueBox');
       
-      // 대기열 렌더링 (클릭 & 드래그 모두 지원)
       queueBox.innerHTML = queue.map(item => `
         <div class="draggable-item" 
              draggable="${isAdmin}" 
+             data-id="${item.id}"
+             data-from="queue"
              ondragstart="dragStart(event, ${item.id}, 'queue')"
-             onclick="handleMemberClick(${item.id}, 'queue')">
+             ontouchstart="touchStart(event, ${item.id}, 'queue')"
+             ontouchmove="touchMove(event)"
+             ontouchend="touchEnd(event, ${item.id}, 'queue')">
           <span>${formatMemberLabel(item)}</span>
         </div>
       `).join('') || '<span style="color:#788c7b; font-size:0.8rem; width:100%; text-align:center; padding:15px 0;">출석 처리된 회원이 없습니다.</span>';
 
-      // 코트 슬롯 렌더링
       for (let key in courtSlots) {
         const slotEl = document.getElementById(`slot-${key}`);
         const list = courtSlots[key];
@@ -623,8 +613,12 @@
               <div class="draggable-item" 
                    style="background:#3a5c41; border-color:#1e3d24;" 
                    draggable="${isAdmin}" 
+                   data-id="${item.id}"
+                   data-from="${key}"
                    ondragstart="dragStart(event, ${item.id}, '${key}')"
-                   onclick="handleMemberClick(${item.id}, '${key}')">
+                   ontouchstart="touchStart(event, ${item.id}, '${key}')"
+                   ontouchmove="touchMove(event)"
+                   ontouchend="touchEnd(event, ${item.id}, '${key}')">
                 <span>${formatMemberLabel(item)}</span>
               </div>
             `;
@@ -635,6 +629,7 @@
       }
     }
 
+    /* 🖥️ PC 드래그 & 드롭 */
     function allowDrop(ev) { if (currentUser && currentUser.isAdmin) ev.preventDefault(); }
     function dragStart(ev, itemId, fromZone) {
       if (!currentUser || !currentUser.isAdmin) return;
@@ -653,6 +648,68 @@
       if (data.fromZone === 'queue') return;
       moveMemberToZone(data.itemId, data.fromZone, 'queue');
     }
+
+    /* 📱 모바일 터치 드래그 & 드롭 엔진 */
+    let touchedEl = null;
+    let touchClone = null;
+
+    function touchStart(e, itemId, fromZone) {
+      if (!currentUser || !currentUser.isAdmin) return;
+      touchedEl = e.currentTarget;
+      
+      const touch = e.touches[0];
+      touchClone = touchedEl.cloneNode(true);
+      touchClone.classList.add('dragging-touch');
+      document.body.appendChild(touchClone);
+      
+      updateClonePosition(touch);
+    }
+
+    function touchMove(e) {
+      if (!touchClone) return;
+      e.preventDefault(); // 화면 스크롤 방지
+      const touch = e.touches[0];
+      updateClonePosition(touch);
+
+      // 드롭 영역 하이라이트 효과
+      const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
+      document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
+      if (targetZone) {
+        const cardEl = document.querySelector(`[data-zone="${targetZone}"]`);
+        if (cardEl) cardEl.classList.add('drag-over');
+      }
+    }
+
+    function touchEnd(e, itemId, fromZone) {
+      if (!touchClone) return;
+      
+      const touch = e.changedTouches[0];
+      const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
+
+      document.querySelectorAll('.drop-card').forEach(card => card.classList.remove('drag-over'));
+      touchClone.remove();
+      touchClone = null;
+      touchedEl = null;
+
+      if (targetZone && targetZone !== fromZone) {
+        moveMemberToZone(itemId, fromZone, targetZone);
+      }
+    }
+
+    function updateClonePosition(touch) {
+      if (touchClone) {
+        touchClone.style.left = `${touch.clientX - 50}px`;
+        touchClone.style.top = `${touch.clientY - 20}px`;
+      }
+    }
+
+    function getZoneUnderTouch(x, y) {
+      const element = document.elementFromPoint(x, y);
+      if (!element) return null;
+      const zoneCard = element.closest('[data-zone]');
+      return zoneCard ? zoneCard.getAttribute('data-zone') : null;
+    }
+
     function removeFromZone(itemId, fromZone) {
       let removedItem = null;
       if (fromZone === 'queue') {
