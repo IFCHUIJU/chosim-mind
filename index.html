@@ -7,25 +7,35 @@
   <!-- Firebase SDK 라이브러리 로드 -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  
+  <!-- 🌿 로고 감성 아이콘 (크로스 라켓 & 셔틀콕) & 파비콘 설정 -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23f7f6f0' stroke='%238ba388' stroke-width='2'/><circle cx='50' cy='50' r='44' fill='none' stroke='%238ba388' stroke-width='0.8'/><path d='M32 30 C 25 30 25 45 32 55 L 68 85' stroke='%231f3a25' stroke-width='3' stroke-linecap='round' fill='none'/><path d='M68 30 C 75 30 75 45 68 55 L 32 85' stroke='%231f3a25' stroke-width='3' stroke-linecap='round' fill='none'/><ellipse cx='30' cy='40' rx='8' ry='12' fill='none' stroke='%231f3a25' stroke-width='2' transform='rotate(-20 30 40)'/><ellipse cx='70' cy='40' rx='8' ry='12' fill='none' stroke='%231f3a25' stroke-width='2' transform='rotate(20 70 40)'/><path d='M46 52 L54 52 L52 60 L48 60 Z' fill='%238ba388'/><circle cx='50' cy='62' r='2' fill='%231f3a25'/></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23f7f6f0'/><circle cx='50' cy='50' r='44' fill='none' stroke='%238ba388' stroke-width='1.5'/><path d='M32 30 C 25 30 25 45 32 55 L 68 85' stroke='%231f3a25' stroke-width='3.5' stroke-linecap='round' fill='none'/><path d='M68 30 C 75 30 75 45 68 55 L 32 85' stroke='%231f3a25' stroke-width='3.5' stroke-linecap='round' fill='none'/><ellipse cx='30' cy='40' rx='8' ry='12' fill='none' stroke='%231f3a25' stroke-width='2.5' transform='rotate(-20 30 40)'/><ellipse cx='70' cy='40' rx='8' ry='12' fill='none' stroke='%231f3a25' stroke-width='2.5' transform='rotate(20 70 40)'/><path d='M46 52 L54 52 L52 60 L48 60 Z' fill='%238ba388'/><circle cx='50' cy='62' r='2' fill='%231f3a25'/></svg>">
+  <meta name="theme-color" content="#f7f6f0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
   <style>
-    /* 🌿 로고 이미지 기반 Palette 설정 */
+    /* 🌿 감성 로고 팔레트 그대로 반영 */
     :root {
-      --primary: #1b3b22;         /* 로고의 딥 포레스트 그린 */
-      --primary-light: #eaf0e8;   /* 연한 산뜻한 그린 베이스 */
-      --accent: #7a9a60;          /* 잎사귀 올리브/세이지 그린 */
-      --bg: #f5f6f2;              /* 소프트 아이보리 톤 배경 */
+      --primary: #1f3a25;         /* 로고의 캘리그라피 딥 포레스트 그린 */
+      --primary-light: #eef3ed;   /* 은은한 잎사귀 그린 빛 투명 베이스 */
+      --accent: #6b8869;          /* 세이지 그린 */
+      --accent-soft: #8ba388;     /* 라켓/월계수 라인 그린 */
+      --bg: #f7f6f0;              /* 로고 원본 크림 아이보리 배경 */
       --card: #ffffff;
-      --text: #222c24;            /* 딥 그레이/그린 텍스트 */
-      --border: #d4ded0;
+      --text: #202b22;            /* 고급스러운 딥 텍스트 */
+      --border: #dfeddd;
+      --border-soft: #e8ede6;
     }
     * { box-sizing: border-box; }
-    body { font-family: 'Apple SD Gothic Neo', sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    body { font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); }
     
     /* 1. Landing / Login Screen */
     #landingScreen {
       position: fixed;
       inset: 0;
-      background: linear-gradient(135deg, #132a18, #1b3b22, #2d4f35);
+      background: #f7f6f0;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -33,98 +43,120 @@
       padding: 20px;
     }
     .landing-box {
-      background: #fafaf7;
-      padding: 30px 25px;
-      border-radius: 16px;
+      background: #ffffff;
+      padding: 35px 28px;
+      border-radius: 24px;
       width: 100%;
       max-width: 380px;
       text-align: center;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
-      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 10px 30px rgba(31, 58, 37, 0.06);
+      border: 1px solid var(--border);
     }
-    .landing-box h1 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.6rem; letter-spacing: -0.5px; }
-    .landing-box p.subtitle { margin-top: 0; font-size: 0.85rem; color: var(--accent); margin-bottom: 20px; font-weight: 500; }
+    .landing-box .logo-circle {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 15px auto;
+      border-radius: 50%;
+      border: 1px solid var(--accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+    }
+    .landing-box h1 { margin: 0 0 4px 0; color: var(--primary); font-size: 1.7rem; letter-spacing: -0.5px; font-weight: 800; }
+    .landing-box p.subtitle { margin-top: 0; font-size: 0.82rem; color: var(--accent); margin-bottom: 22px; font-weight: 500; letter-spacing: -0.2px; }
     .landing-box input {
       width: 100%;
-      padding: 12px;
+      padding: 13px 15px;
       margin: 6px 0;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.95rem;
-      background: #fff;
+      border: 1px solid #dbe3da;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      background: #fafbfa;
+      outline: none;
+      transition: 0.2s;
     }
+    .landing-box input:focus { border-color: var(--accent); background: #fff; }
     .landing-box .info-text {
       background: var(--primary-light);
-      border-radius: 8px;
-      padding: 10px;
-      font-size: 0.78rem;
-      color: #334436;
-      margin-bottom: 15px;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.8rem;
+      color: #314a37;
+      margin-bottom: 18px;
       text-align: left;
-      line-height: 1.4;
-      border: 1px solid #d0dfcc;
+      line-height: 1.5;
+      border: 1px solid var(--border);
     }
-    .btn-block { width: 100%; padding: 12px; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; margin-top: 8px; border: none; transition: 0.2s; }
-    .btn-guest { background: #e8eae4; color: #445046; border: 1px solid #ced4ca; }
+    .btn-block { width: 100%; padding: 13px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 8px; border: none; transition: 0.2s; }
+    .btn-guest { background: #eef0eb; color: #48594b; }
+    .btn-guest:hover { background: #e2e6df; }
     
     /* 2. Main App Screen */
     #mainAppScreen { display: none; }
     
     /* Header & Navigation */
-    .header { background: var(--primary); color: white; padding: 14px 15px; text-align: center; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .header h1 { margin: 0; font-size: 1.2rem; letter-spacing: -0.5px; }
-    .user-info { position: absolute; right: 10px; top: 12px; font-size: 0.8rem; }
-    .btn-logout { background: rgba(255,255,255,0.18); color: white; border: none; padding: 5px 9px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+    .header { background: #ffffff; color: var(--primary); padding: 16px 15px; text-align: center; position: relative; border-bottom: 1px solid var(--border); }
+    .header h1 { margin: 0; font-size: 1.15rem; letter-spacing: -0.5px; font-weight: 700; }
+    .user-info { position: absolute; right: 12px; top: 13px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; }
+    .btn-logout { background: var(--primary-light); color: var(--primary); border: 1px solid var(--border); padding: 5px 10px; border-radius: 20px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
 
     /* Tabs */
-    .tabs { display: flex; background: white; border-bottom: 1px solid var(--border); }
-    .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; font-size: 0.9rem; font-weight: bold; color: #6e7e72; cursor: pointer; }
-    .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
-    .tab-content { display: none; padding: 12px; }
+    .tabs { display: flex; background: #ffffff; border-bottom: 1px solid var(--border-soft); padding: 0 10px; }
+    .tab-btn { flex: 1; padding: 13px 5px; border: none; background: none; font-size: 0.88rem; font-weight: 600; color: #7f9181; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
+    .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); font-weight: 700; }
+    .tab-content { display: none; padding: 14px; max-width: 600px; margin: 0 auto; }
     .tab-content.active { display: block; }
 
     /* UI Components */
-    .card { background: var(--card); padding: 14px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid #eef2ec; }
-    .btn { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.75rem; }
+    .card { background: var(--card); padding: 16px; border-radius: 16px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(31, 58, 37, 0.03); border: 1px solid var(--border-soft); }
+    .btn { padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.75rem; transition: 0.15s; }
     .btn-main { background: var(--primary); color: white; }
-    .btn-action { background: #4a6b53; color: white; }
-    .btn-danger { background: #c62828; color: white; }
-    .btn-edit { background: #d97706; color: white; }
-    .btn-disabled { background: #d1d5db !important; color: #6b7280 !important; cursor: not-allowed !important; }
+    .btn-main:hover { background: #15291a; }
+    .btn-action { background: var(--accent); color: white; }
+    .btn-danger { background: #d9534f; color: white; }
+    .btn-edit { background: #e09f3e; color: white; }
+    .btn-disabled { background: #e5ebe4 !important; color: #9bb09e !important; cursor: not-allowed !important; }
     
     /* Board Layout */
     .board-container { display: flex; flex-direction: column; gap: 12px; }
     .drop-zone-container { display: flex; flex-direction: column; gap: 10px; }
-    .drop-card { background: #fff; border: 2px dashed #b2c2b0; border-radius: 10px; padding: 10px; }
-    .drop-title { font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
+    .drop-card { background: #fff; border: 1.5px dashed var(--accent-soft); border-radius: 14px; padding: 12px; }
+    .drop-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 10px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
     .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; min-height: 60px; }
     
-    .draggable-item { background: #f0f4ef; border: 1px solid #cce0c9; color: var(--primary); padding: 6px 10px; border-radius: 20px; font-size: 0.8rem; cursor: grab; display: inline-flex; align-items: center; justify-content: center; margin: 2px; user-select: none; text-align: center; font-weight: 600; }
+    .draggable-item { background: var(--primary-light); border: 1px solid var(--border); color: var(--primary); padding: 7px 12px; border-radius: 20px; font-size: 0.8rem; cursor: grab; display: inline-flex; align-items: center; justify-content: center; margin: 2px; user-select: none; text-align: center; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     .draggable-item:active { cursor: grabbing; opacity: 0.6; }
     
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th, td { padding: 9px 4px; text-align: center; border-bottom: 1px solid #eef2ec; }
-    th { background: var(--primary-light); color: var(--primary); font-weight: bold; }
+    th, td { padding: 10px 4px; text-align: center; border-bottom: 1px solid var(--border-soft); }
+    th { background: var(--primary-light); color: var(--primary); font-weight: 700; border-top-left-radius: 6px; border-top-right-radius: 6px; }
   </style>
-<!-- 웹앱 및 파비콘(아이콘) 설정 -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231b3b22'/><path d='M50 20 C40 35 35 55 35 68 C35 76 65 76 65 68 C65 55 60 35 50 20 Z' fill='none' stroke='%23ffffff' stroke-width='3' stroke-dasharray='4,3'/><path d='M35 68 C35 76 65 76 65 68 Z' fill='%237a9a60'/><circle cx='50' cy='78' r='6' fill='%23ffffff'/></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231b3b22'/><path d='M50 20 C40 35 35 55 35 68 C35 76 65 76 65 68 C65 55 60 35 50 20 Z' fill='none' stroke='%23ffffff' stroke-width='3' stroke-dasharray='4,3'/><path d='M35 68 C35 76 65 76 65 68 Z' fill='%237a9a60'/><circle cx='50' cy='78' r='6' fill='%23ffffff'/></svg>">
-<meta name="theme-color" content="#1b3b22">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
 
   <!-- ================= 1. 첫 접속 메인 로그인 화면 ================= -->
   <div id="landingScreen">
     <div class="landing-box">
-      <h1>🏸 초심처럼</h1>
+      <!-- 🌿 감성 로고 아이콘 반영 -->
+      <div class="logo-circle">
+        <svg width="46" height="46" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#8ba388" stroke-width="1.5"/>
+          <path d="M32 30 C 25 30 25 45 32 55 L 68 85" stroke="#1f3a25" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M68 30 C 75 30 75 45 68 55 L 32 85" stroke="#1f3a25" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <ellipse cx="30" cy="40" rx="8" ry="12" fill="none" stroke="#1f3a25" stroke-width="2.5" transform="rotate(-20 30 40)"/>
+          <ellipse cx="70" cy="40" rx="8" ry="12" fill="none" stroke="#1f3a25" stroke-width="2.5" transform="rotate(20 70 40)"/>
+          <path d="M46 52 L54 52 L52 60 L48 60 Z" fill="#8ba388"/>
+          <circle cx="50" cy="62" r="2" fill="#1f3a25"/>
+        </svg>
+      </div>
+      <h1>초심처럼</h1>
       <p class="subtitle">처음의 마음으로, 함께 즐기는 배드민턴</p>
       
       <div class="info-text">
-        <b>💡 안내</b><br>
+        <b>💡 접속 안내</b><br>
         • <b>운영진:</b> ID <code>admin</code> / PW <code>1234</code><br>
-        • <b>일반회원:</b> 본인 이름을 입력 후 접속
+        • <b>일반회원:</b> 본인 이름만 입력 후 접속
       </div>
 
       <input type="text" id="landingId" placeholder="아이디 또는 이름 입력">
@@ -139,7 +171,7 @@
   <div id="mainAppScreen">
     <!-- Header -->
     <div class="header">
-      <h1>🏸 배드민턴 동호회 [초심처럼]</h1>
+      <h1>🏸 초심처럼 BADMINTON CLUB</h1>
       <div class="user-info" id="user-bar">
         <span id="role-label">비로그인</span>
         <button class="btn-logout" onclick="goToLandingScreen()">로그아웃</button>
@@ -156,8 +188,8 @@
     <!-- TAB 1: 공지사항 -->
     <div id="noticeTab" class="tab-content active">
       <div class="card">
-        <h3 style="color:var(--primary); margin-top:5px;">📌 [필독] '초심처럼' 모임 이용 수칙</h3>
-        <ul style="padding-left: 20px; font-size: 0.9rem; line-height: 1.7; color: #334436;">
+        <h3 style="color:var(--primary); margin-top:5px; font-size:1.05rem;">📌 [필독] '초심처럼' 모임 이용 수칙</h3>
+        <ul style="padding-left: 18px; font-size: 0.88rem; line-height: 1.8; color: #2d3d30;">
           <li><b>슬로건:</b> 처음의 마음으로, 함께 즐기는 배드민턴 🌿</li>
           <li><b>일시:</b> 매일 저녁 7시 ~ 10시</li>
           <li><b>장소:</b> 와우산 체육관</li>
@@ -171,14 +203,14 @@
     <!-- TAB 2: 회원명단 및 출석체크 -->
     <div id="memberTab" class="tab-content">
       <div class="card">
-        <h3 style="color:var(--primary); margin-top:5px;">📋 회원 명단 및 출석 관리</h3>
-        <div id="adminAddMember" style="display:none; margin-bottom:15px; background:var(--primary-light); padding:10px; border-radius:8px; border:1px solid #d0dfcc;">
-          <b style="color:var(--primary);">[운영진] 신규 회원 등록</b>
-          <div style="display:flex; gap:4px; margin-top:5px; flex-wrap:wrap;">
-            <input type="text" id="newName" placeholder="이름" style="padding:6px; flex:1; min-width:70px; border:1px solid #ccc; border-radius:4px;">
-            <select id="newGender" style="padding:6px; border-radius:4px;"><option value="남">남</option><option value="여">여</option></select>
-            <select id="newLevel" style="padding:6px; border-radius:4px;"><option value="초심">초심</option><option value="D조">D조</option><option value="C조">C조</option><option value="B조">B조</option><option value="A조">A조</option></select>
-            <select id="newRole" style="padding:6px; border-radius:4px;"><option value="정회원">정회원</option><option value="게스트">게스트</option></select>
+        <h3 style="color:var(--primary); margin-top:5px; font-size:1.05rem;">📋 회원 명단 및 출석 관리</h3>
+        <div id="adminAddMember" style="display:none; margin-bottom:15px; background:var(--primary-light); padding:12px; border-radius:12px; border:1px solid var(--border);">
+          <b style="color:var(--primary); font-size:0.85rem;">[운영진] 신규 회원 등록</b>
+          <div style="display:flex; gap:4px; margin-top:8px; flex-wrap:wrap;">
+            <input type="text" id="newName" placeholder="이름" style="padding:6px 10px; flex:1; min-width:70px; border:1px solid var(--border); border-radius:6px;">
+            <select id="newGender" style="padding:6px; border-radius:6px; border:1px solid var(--border);"><option value="남">남</option><option value="여">여</option></select>
+            <select id="newLevel" style="padding:6px; border-radius:6px; border:1px solid var(--border);"><option value="초심">초심</option><option value="D조">D조</option><option value="C조">C조</option><option value="B조">B조</option><option value="A조">A조</option></select>
+            <select id="newRole" style="padding:6px; border-radius:6px; border:1px solid var(--border);"><option value="정회원">정회원</option><option value="게스트">게스트</option></select>
             <button class="btn btn-main" onclick="addMember()">추가</button>
           </div>
         </div>
@@ -201,9 +233,9 @@
     <!-- TAB 3: 세로형 게임판 및 대기열 -->
     <div id="gameTab" class="tab-content">
       <div class="board-container">
-        <!-- 1. 게임 진행 및 대기 매치 (상단 배치) -->
+        <!-- 1. 게임 진행 및 대기 매치 -->
         <div class="drop-zone-container">
-          <!-- 1코트 (진행 중) -->
+          <!-- 1코트 -->
           <div class="drop-card">
             <div class="drop-title">
               <span>🏟️ 1코트 (진행)</span>
@@ -214,7 +246,7 @@
             <div class="slots" id="slot-c1" ondrop="dropToCourt(event, 'c1')" ondragover="allowDrop(event)"></div>
           </div>
 
-          <!-- 2코트 (진행 중) -->
+          <!-- 2코트 -->
           <div class="drop-card">
             <div class="drop-title">
               <span>🏟️ 2코트 (진행)</span>
@@ -230,8 +262,8 @@
             <div class="drop-title">
               <span>⏱️ 대기 1 매치</span>
               <span class="admin-only-btn" style="display:none;">
-                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 5px;" onclick="moveMatch('w1', 'c1')">⚡1코트이동</button>
-                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 5px;" onclick="moveMatch('w1', 'c2')">⚡2코트이동</button>
+                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 6px;" onclick="moveMatch('w1', 'c1')">⚡1코트이동</button>
+                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 6px;" onclick="moveMatch('w1', 'c2')">⚡2코트이동</button>
               </span>
             </div>
             <div class="slots" id="slot-w1" ondrop="dropToCourt(event, 'w1')" ondragover="allowDrop(event)"></div>
@@ -242,19 +274,19 @@
             <div class="drop-title">
               <span>⏱️ 대기 2 매치</span>
               <span class="admin-only-btn" style="display:none;">
-                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 5px;" onclick="moveMatch('w2', 'c1')">⚡1코트이동</button>
-                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 5px;" onclick="moveMatch('w2', 'c2')">⚡2코트이동</button>
+                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 6px;" onclick="moveMatch('w2', 'c1')">⚡1코트이동</button>
+                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 6px;" onclick="moveMatch('w2', 'c2')">⚡2코트이동</button>
               </span>
             </div>
             <div class="slots" id="slot-w2" ondrop="dropToCourt(event, 'w2')" ondragover="allowDrop(event)"></div>
           </div>
         </div>
 
-        <!-- 2. 대기열 목록 (하단 배치) -->
+        <!-- 2. 대기열 목록 -->
         <div class="card">
-          <h3 style="margin: 0 0 5px 0; font-size: 1rem; color:var(--primary);">🙋‍♂️ 대기열 (출석자)</h3>
-          <p style="font-size:0.75rem; color:#666; margin-top:0;">운영진은 회원을 위쪽 코트로 드래그하거나 대기 매치로 배치하세요.</p>
-          <div id="queueBox" style="min-height: 100px; background:#f5f7f4; padding:10px; border-radius:8px; border:1px solid #e2e8e0; display:flex; flex-wrap:wrap; gap:4px;" ondrop="dropToQueue(event)" ondragover="allowDrop(event)"></div>
+          <h3 style="margin: 0 0 4px 0; font-size: 0.95rem; color:var(--primary);">🙋‍♂️ 대기열 (출석자)</h3>
+          <p style="font-size:0.75rem; color:#78887a; margin-top:0;">운영진은 회원을 위쪽 코트로 드래그해서 배치하세요.</p>
+          <div id="queueBox" style="min-height: 90px; background:var(--primary-light); padding:10px; border-radius:12px; border:1px solid var(--border); display:flex; flex-wrap:wrap; gap:4px;" ondrop="dropToQueue(event)" ondragover="allowDrop(event)"></div>
         </div>
 
       </div>
@@ -263,15 +295,15 @@
 
   <script>
     // 🔥 Firebase 설정 영역
-const firebaseConfig = {
-  apiKey: "AIzaSyA-0xNU39H2wjmm0R8HT98mSsU92TyGBaQ",
-  authDomain: "badminton--app.firebaseapp.com",
-  databaseURL: "https://badminton--app-default-rtdb.firebaseio.com",
-  projectId: "badminton--app",
-  storageBucket: "badminton--app.firebasestorage.app",
-  messagingSenderId: "362202939444",
-  appId: "1:362202939444:web:c3030f50772697191a0a61"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-0xNU39H2wjmm0R8HT98mSsU92TyGBaQ",
+      authDomain: "badminton--app.firebaseapp.com",
+      databaseURL: "https://badminton--app-default-rtdb.firebaseio.com",
+      projectId: "badminton--app",
+      storageBucket: "badminton--app.firebasestorage.app",
+      messagingSenderId: "362202939444",
+      appId: "1:362202939444:web:c3030f50772697191a0a61"
+    };
     
     let db = null;
     try {
@@ -505,7 +537,7 @@ const firebaseConfig = {
         <div class="draggable-item" draggable="${isAdmin}" ondragstart="dragStart(event, ${item.id}, 'queue')">
           <span>${formatMemberLabel(item)}</span>
         </div>
-      `).join('') || '<span style="color:#88998a; font-size:0.8rem; width:100%; text-align:center;">출석 처리된 회원이 아래에 표시됩니다.</span>';
+      `).join('') || '<span style="color:#819483; font-size:0.8rem; width:100%; text-align:center;">출석 처리된 회원이 표시됩니다.</span>';
 
       for (let key in courtSlots) {
         const slotEl = document.getElementById(`slot-${key}`);
@@ -515,12 +547,12 @@ const firebaseConfig = {
           const item = list[idx];
           if (item) {
             return `
-              <div class="draggable-item" style="background:#e0ede0; border-color:#a8c4a6;" draggable="${isAdmin}" ondragstart="dragStart(event, ${item.id}, '${key}')">
+              <div class="draggable-item" style="background:#e3ebd2; border-color:#c8d6b2;" draggable="${isAdmin}" ondragstart="dragStart(event, ${item.id}, '${key}')">
                 <span>${formatMemberLabel(item)}</span>
               </div>
             `;
           } else {
-            return `<div style="border:1px dashed #c0cfbe; border-radius:4px; height:30px; display:flex; align-items:center; justify-content:center; color:#a0b09f; font-size:0.75rem;">빈 슬롯</div>`;
+            return `<div style="border:1px dashed #d0ded1; border-radius:6px; height:32px; display:flex; align-items:center; justify-content:center; color:#9cb39e; font-size:0.75rem;">빈 슬롯</div>`;
           }
         }).join('');
       }
