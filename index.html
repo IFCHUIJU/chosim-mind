@@ -593,16 +593,20 @@ function moveMemberToZone(itemId, fromZone, toZone) {
   }
 }
 
-    function moveMatch(fromMatchKey, targetCourtKey) {
+function moveMatch(fromMatchKey, targetCourtKey) {
       if (!currentUser || !currentUser.isAdmin) return alert('운영진만 이동이 가능합니다.');
       
       const sourceList = courtSlots[fromMatchKey];
       if (!sourceList || sourceList.length === 0) return alert('이동할 회원이 대기 매치에 없습니다.');
 
-      if (courtSlots[targetCourtKey] && courtSlots[targetCourtKey].length > 0) {
-        courtSlots[targetCourtKey].forEach(item => queue.push(item));
+      // 🛑 [수정된 부분] 코트에 이미 사람이 있는 경우 이동 차단
+      const targetList = courtSlots[targetCourtKey] || [];
+      if (targetList.length > 0) {
+        const courtName = targetCourtKey === 'c1' ? '1코트' : '2코트';
+        return alert(`현재 ${courtName}에 진행 중인 게임이 있습니다.\n게임을 종료한 후 이동해 주세요!`);
       }
 
+      // 코트가 완전히 비어있을 때만 이동 수행
       courtSlots[targetCourtKey] = [...sourceList];
       courtSlots[fromMatchKey] = [];
 
