@@ -111,31 +111,53 @@
     .btn-edit { background: #e09f3e; color: white; }
     .btn-disabled { background: #e5ebe4 !important; color: #9bb09e !important; cursor: not-allowed !important; }
     
-    /* Board Layout */
-    .board-container { display: flex; flex-direction: column; gap: 12px; }
-    .drop-zone-container { display: flex; flex-direction: column; gap: 10px; }
-    .drop-card { background: #fff; border: 1.5px dashed var(--accent-soft); border-radius: 14px; padding: 12px; transition: background 0.2s; }
+   /* Board Layout (Option 2: 2열 분할 레이아웃) */
+    .board-container { 
+      display: grid;
+      grid-template-columns: 1.2fr 1fr; /* 좌:우 비율 (코트:대기자) */
+      gap: 10px; 
+      align-items: start;
+    }
+    .drop-zone-container { display: flex; flex-direction: column; gap: 8px; }
+    .drop-card { 
+      background: #fff; 
+      border: 1.5px dashed var(--accent-soft); 
+      border-radius: 12px; 
+      padding: 8px; 
+      transition: background 0.2s; 
+    }
     .drop-card.drag-over { background: #e8f0e7; border-color: var(--primary); }
-    .drop-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 10px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
-    .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; min-height: 60px; }
+    .drop-title { 
+      font-weight: 700; 
+      font-size: 0.8rem; 
+      margin-bottom: 6px; 
+      color: var(--primary); 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      flex-wrap: wrap; 
+      gap: 4px; 
+    }
+    .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; min-height: 50px; }
     
     .draggable-item { 
       background: var(--primary); 
       border: 1px solid #142819; 
       color: #ffffff; 
-      padding: 10px 14px; 
-      border-radius: 12px; 
-      font-size: 0.85rem; 
+      padding: 8px 6px; 
+      border-radius: 10px; 
+      font-size: 0.78rem; 
       cursor: grab; 
       display: inline-flex; 
       align-items: center; 
       justify-content: center; 
-      margin: 3px; 
+      margin: 2px; 
       user-select: none; 
       text-align: center; 
       font-weight: 700; 
-      box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.12);
       touch-action: none;
+      word-break: keep-all;
     }
     .draggable-item.dragging-touch {
       position: fixed !important;
@@ -146,17 +168,18 @@
       box-shadow: 0 10px 20px rgba(0,0,0,0.25) !important;
     }
 
-#queueBox {
-      max-height: 140px; /* 대기자가 많아지면 내부에서 스크롤되도록 고정 */
+    #queueBox {
+      min-height: 250px; 
+      max-height: calc(100vh - 180px); /* 모바일 화면 높이에 맞게 고정 */
       overflow-y: auto;
       background: #f0f4ef; 
-      padding: 10px; 
-      border-radius: 14px; 
+      padding: 8px; 
+      border-radius: 12px; 
       border: 1.5px solid var(--border); 
       display: flex; 
-      flex-wrap: wrap; 
-      gap: 6px; 
-      align-content: flex-start;
+      flex-direction: column; /* 세로로 예쁘게 정렬 */
+      gap: 5px; 
+      align-content: stretch;
     }
     
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -276,21 +299,15 @@
 <!-- TAB 3: 코트 및 대기열 -->
     <div id="gameTab" class="tab-content">
       <div class="board-container">
-
-        <!-- 🙋‍♂️ 대기자 목록 (상단 배치) -->
-        <div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)" style="margin-bottom: 12px; position: sticky; top: 0; z-index: 100;">
-          <h3 style="margin: 0 0 6px 0; font-size: 0.95rem; color:var(--primary);">🙋‍♂️ 대기자 목록</h3>
-          <div id="queueBox"></div>
-        </div>
-
-        <!-- 🏟️ 코트 및 대기 매치 -->
+        
+        <!-- [왼쪽 열] 코트 및 대기 매치 -->
         <div class="drop-zone-container">
           <!-- 1코트 -->
           <div class="drop-card" data-zone="c1" ondrop="dropToCourt(event, 'c1')" ondragover="allowDrop(event)">
             <div class="drop-title">
-              <span>🏟️ 1코트 (진행)</span>
+              <span>🏟️ 1코트</span>
               <span id="btnC1Win" class="admin-only" style="display:none;">
-                <button class="btn btn-danger" style="font-size:0.65rem; padding:3px 6px;" onclick="finishGame('c1')">게임 종료</button>
+                <button class="btn btn-danger" style="font-size:0.6rem; padding:2px 5px;" onclick="finishGame('c1')">종료</button>
               </span>
             </div>
             <div class="slots" id="slot-c1"></div>
@@ -299,9 +316,9 @@
           <!-- 2코트 -->
           <div class="drop-card" data-zone="c2" ondrop="dropToCourt(event, 'c2')" ondragover="allowDrop(event)">
             <div class="drop-title">
-              <span>🏟️ 2코트 (진행)</span>
+              <span>🏟️ 2코트</span>
               <span id="btnC2Win" class="admin-only" style="display:none;">
-                <button class="btn btn-danger" style="font-size:0.65rem; padding:3px 6px;" onclick="finishGame('c2')">게임 종료</button>
+                <button class="btn btn-danger" style="font-size:0.6rem; padding:2px 5px;" onclick="finishGame('c2')">종료</button>
               </span>
             </div>
             <div class="slots" id="slot-c2"></div>
@@ -310,10 +327,10 @@
           <!-- 대기 1 매치 -->
           <div class="drop-card" data-zone="w1" ondrop="dropToCourt(event, 'w1')" ondragover="allowDrop(event)">
             <div class="drop-title">
-              <span>⏱️ 대기 1 매치</span>
+              <span>⏱️ 대기 1</span>
               <span class="admin-only" style="display:none;">
-                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 6px;" onclick="moveMatch('w1', 'c1')">⚡1코트이동</button>
-                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 6px;" onclick="moveMatch('w1', 'c2')">⚡2코트이동</button>
+                <button class="btn btn-action" style="font-size:0.6rem; padding:2px 4px;" onclick="moveMatch('w1', 'c1')">⚡1코트</button>
+                <button class="btn btn-action" style="font-size:0.6rem; padding:2px 4px;" onclick="moveMatch('w1', 'c2')">⚡2코트</button>
               </span>
             </div>
             <div class="slots" id="slot-w1"></div>
@@ -322,30 +339,24 @@
           <!-- 대기 2 매치 -->
           <div class="drop-card" data-zone="w2" ondrop="dropToCourt(event, 'w2')" ondragover="allowDrop(event)">
             <div class="drop-title">
-              <span>⏱️ 대기 2 매치</span>
+              <span>⏱️ 대기 2</span>
               <span class="admin-only" style="display:none;">
-                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 6px;" onclick="moveMatch('w2', 'c1')">⚡1코트이동</button>
-                <button class="btn btn-action" style="font-size:0.65rem; padding:3px 6px;" onclick="moveMatch('w2', 'c2')">⚡2코트이동</button>
+                <button class="btn btn-action" style="font-size:0.6rem; padding:2px 4px;" onclick="moveMatch('w2', 'c1')">⚡1코트</button>
+                <button class="btn btn-action" style="font-size:0.6rem; padding:2px 4px;" onclick="moveMatch('w2', 'c2')">⚡2코트</button>
               </span>
             </div>
             <div class="slots" id="slot-w2"></div>
           </div>
         </div>
 
-      </div>
-    </div>
-
-        <!-- 대기열 카드 -->
-        <div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)">
-          <h3 style="margin: 0 0 4px 0; font-size: 0.95rem; color:var(--primary);">🙋‍♂️ 대기자</h3>
-          <p style="font-size:0.75rem; color:#5c6e5e; margin-top:0; margin-bottom:8px;">
-          </p>
+        <!-- [오른쪽 열] 대기자 목록 -->
+        <div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)" style="padding:8px; margin-bottom:0; position:sticky; top:10px;">
+          <h3 style="margin: 0 0 6px 0; font-size: 0.85rem; color:var(--primary);">🙋‍♂️ 대기자</h3>
           <div id="queueBox"></div>
         </div>
 
       </div>
     </div>
-  </div>
 
   <script>
     // 🔥 Firebase 설정
