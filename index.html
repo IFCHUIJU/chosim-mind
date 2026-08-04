@@ -801,29 +801,40 @@ function renderQueueAndCourts() {
       moveMemberToZone(Number(data.itemId), data.fromZone, 'queue');
     }
 
-/* 📱 안정화된 모바일 터치 엔진 */
+/* 📱 스크롤 끊김/텀 현상 완벽 해결된 터치 엔진 */
 let touchedEl = null;
 let touchClone = null;
+let dragTimer = null; // 드래그 시작 딜레이 타이머 추가
 
 function touchStart(e, itemId, fromZone) {
   if (!currentUser || !currentUser.isAdmin) return;
   
-  touchedEl = e.currentTarget.closest('.draggable-item');
-  if (!touchedEl) return;
+  const targetEl = e.currentTarget.closest('.draggable-item');
+  if (!targetEl) return;
 
   const touch = e.touches[0];
-  touchClone = touchedEl.cloneNode(true);
-  touchClone.classList.add('dragging-touch');
-  document.body.appendChild(touchClone);
-  
-  updateClonePosition(touch);
+  touchedEl = targetEl;
+
+  // ⏱️ 손잡이를 0.12초 이상 꾹 누르고 있을 때만 드래그 시작!
+  dragTimer = setTimeout(() => {
+    touchClone = touchedEl.cloneNode(true);
+    touchClone.classList.add('dragging-touch');
+    document.body.appendChild(touchClone);
+    updateClonePosition(touch);
+  }, 120);
 }
 
 function touchMove(e) {
-  // 🛑 클론(드래그 중인 카드)이 없으면 화면 스크롤이 정상 작동하게 둠!
-  if (!touchClone) return;
+  // 슥슥 올릴 때는 dragTimer를 즉시 취소하여 부드러운 스크롤 실행
+  if (!touchClone) {
+    if (dragTimer) {
+      clearTimeout(dragTimer);
+      dragTimer = null;
+    }
+    return;
+  }
 
-  // 손잡이를 쥐고 카드를 이동시킬 때만 스크롤 차단
+  // 진짜 꾹 눌러서 드래그 상태가 된 경우에만 스크롤 차단
   if (e.cancelable) e.preventDefault(); 
   
   const touch = e.touches[0];
@@ -838,7 +849,15 @@ function touchMove(e) {
 }
 
 function touchEnd(e, itemId, fromZone) {
-  if (!touchClone) return;
+  if (dragTimer) {
+    clearTimeout(dragTimer);
+    dragTimer = null;
+  }
+
+  if (!touchClone) {
+    touchedEl = null;
+    return;
+  }
   
   const touch = e.changedTouches[0];
   const targetZone = getZoneUnderTouch(touch.clientX, touch.clientY);
