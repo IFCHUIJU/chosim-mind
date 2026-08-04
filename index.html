@@ -177,17 +177,48 @@
     </div>
 
     <!-- TAB 1: 공지사항 -->
+<!-- TAB 1: 공지사항 -->
     <div id="noticeTab" class="tab-content active">
       <div class="card">
-        <h3 style="color:var(--primary); margin-top:5px; font-size:1.05rem;">📌 [필독] '초심처럼' 모임 이용 수칙</h3>
-        <ul style="padding-left: 18px; font-size: 0.88rem; line-height: 1.8; color: #2d3d30;">
-          <li><b>슬로건:</b> 처음의 마음으로, 함께 즐기는 배드민턴 🌿</li>
-          <li><b>일시:</b> 매일 저녁 7시 ~ 10시</li>
-          <li><b>장소:</b> 와우산 체육관</li>
-          <li><b>준비물:</b> 라켓, 배드민턴 전용화, 운동복</li>
-          <li><b>공용콕:</b> 삼화블랙 사용 (모임 내 구매 가능)</li>
-          <li>게스트는 1회 참석 체험 후 가입 승인 절차가 진행됩니다.</li>
+        <h3 style="color:var(--primary); margin-top:5px; margin-bottom:12px; font-size:1.1rem; border-bottom:2px solid var(--border-soft); padding-bottom:8px;">📌 모임 안내</h3>
+        <p style="margin: 6px 0; font-size: 0.9rem;"><b>• 모임 일시:</b> 매일(월~일) 저녁 7시 ~ 10시</p>
+        <p style="margin: 6px 0; font-size: 0.9rem;"><b>• 모임 장소:</b> 홍대 와우산 (거점)</p>
+      </div>
+
+      <div class="card">
+        <h3 style="color:var(--primary); margin-top:5px; margin-bottom:12px; font-size:1.1rem; border-bottom:2px solid var(--border-soft); padding-bottom:8px;">📋 가입 조건 및 준비물</h3>
+        <p style="margin: 6px 0; font-size: 0.9rem;"><b>• 지원 급수:</b> ~ D조</p>
+        <p style="margin: 6px 0; font-size: 0.9rem;"><b>• 나이 제한:</b> ~ 50대까지 <span style="font-size:0.8rem; color:#666;">(단, 미성년자는 부모님 동의 필수)</span></p>
+        <p style="margin: 6px 0; font-size: 0.9rem;"><b>• 개인 준비물:</b> 배드민턴 라켓, 배드민턴 전용화, 운동복</p>
+        <p style="margin: 6px 0; font-size: 0.9rem;"><b>• 지정 셔틀콕:</b> 삼화블랙 🏸</p>
+      </div>
+
+      <div class="card">
+        <h3 style="color:var(--primary); margin-top:5px; margin-bottom:12px; font-size:1.1rem; border-bottom:2px solid var(--border-soft); padding-bottom:8px;">🍀 ’초심처럼‘ 모임 수칙</h3>
+        <ul style="padding-left: 18px; font-size: 0.88rem; line-height: 1.85; color: #2d3d30; margin: 0;">
+          <li>운동은 <b>4인 이상</b>일 경우에만 진행됩니다.</li>
+          <li>하루 정원은 <b>'12명'</b>입니다.</li>
+          <li>체육관 도착 시 운영진에게 <b>지정콕 2개 제출</b> 필수입니다.</li>
+          <li>와우산을 거점으로 활동하되, 여름/겨울철은 벙 형식으로 운영될 수 있습니다.</li>
+          <li>벙은 이미 활성화된 운동 시간을 제외하고 자유롭게 개최 가능합니다. <span style="font-size:0.8rem; color:#666;">(단, 참석인원 전원 동의 시 체육관 변경 가능)</span></li>
+          <li>게스트 신청은 단톡방 통보 후 댓글에 <b>[성함/성별/급수]</b> 작성 바랍니다. <span style="font-size:0.8rem; color:#d9534f;">(게스트 관련 문제는 신청자 책임)</span></li>
+          <li>지각 및 당일 불참 시 반드시 톡방에 통보해야 합니다. <span style="font-size:0.8rem; color:#d9534f;">(당일 불참 시 최소 운동 시작 2시간 전까지!)</span></li>
         </ul>
+      </div>
+
+      <div class="card" style="border-left: 4px solid #d9534f;">
+        <h3 style="color:#d9534f; margin-top:5px; margin-bottom:12px; font-size:1.1rem; border-bottom:2px solid var(--border-soft); padding-bottom:8px;">🚨 주의사항 (강제 제명 사유)</h3>
+        <ul style="padding-left: 18px; font-size: 0.88rem; line-height: 1.85; color: #2d3d30; margin: 0;">
+          <li>모임 수칙을 꾸준히 지키지 않는 분</li>
+          <li>당일 불참 번복이 잦으신 분</li>
+          <li>운영진 선에서 통제가 불가능한 독불장군</li>
+          <li>그 외 모임의 물을 흐리는 분</li>
+        </ul>
+        <p style="margin-top: 12px; margin-bottom: 0; font-size: 0.82rem; color: #d9534f; font-weight: bold;">※ 위 사항에 해당되는 분은 경고 없이 언제든 제명될 수 있습니다.</p>
+      </div>
+
+      <div style="text-align: center; padding: 10px; font-size: 0.85rem; color: var(--accent);">
+        💬 궁금한 사항은 모임장 및 운영진에게 언제든지 문의해 주세요!
       </div>
     </div>
 
@@ -305,11 +336,7 @@
     } catch(e) { console.log("DB 로컬 테스트 작동중"); }
 
     let currentUser = null;
-    let members = [
-      { id: 1, name: '김철수', gender: '남', role: '정회원', level: 'D조', isPresent: false },
-      { id: 2, name: '이영희', gender: '여', role: '정회원', level: '초심', isPresent: false },
-      { id: 3, name: '박민수', gender: '남', role: '게스트', level: 'D조', isPresent: false }
-    ];
+    let members = [];
     let queue = [];
     let courtSlots = { c1: [], c2: [], w1: [], w2: [] };
 
