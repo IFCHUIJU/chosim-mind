@@ -174,15 +174,14 @@
       
       <div class="info-text">
         <b>💡 접속 안내</b><br>
-        • <b>운영진:</b> ID <code>admin</code> / PW <code>1234</code><br>
-        • <b>일반회원:</b> 본인 이름만 입력 후 접속
+        • <b>일반회원:</b> 로그인없이 입장
       </div>
 
-      <input type="text" id="landingId" placeholder="아이디 또는 이름 입력">
+      <input type="text" id="landingId" placeholder="아이디(운영진 전용) 입력">
       <input type="password" id="landingPw" placeholder="비밀번호 (운영진 전용)">
       
       <button class="btn-block btn-main" onclick="enterAppWithLogin()">로그인 후 입장</button>
-      <button class="btn-block btn-guest" onclick="enterAppAsGuest()">로그인 없이 구경하기</button>
+      <button class="btn-block btn-guest" onclick="enterAppAsGuest()">로그인 없이 입장</button>
     </div>
   </div>
 
@@ -198,8 +197,8 @@
 
     <div class="tabs">
       <button class="tab-btn active" onclick="openTab(event, 'noticeTab')">📢 공지사항</button>
-      <button class="tab-btn" onclick="openTab(event, 'memberTab')">👥 회원/출석</button>
-      <button class="tab-btn" onclick="openTab(event, 'gameTab')">🏸 코트&대기열</button>
+      <button class="tab-btn" onclick="openTab(event, 'memberTab')">👥 회원명단</button>
+      <button class="tab-btn" onclick="openTab(event, 'gameTab')">🏸 게임현황</button>
     </div>
 
     <!-- TAB 1: 공지사항 -->
@@ -326,9 +325,8 @@
 
         <!-- 대기열 카드 -->
         <div class="card" data-zone="queue" ondrop="dropToQueue(event)" ondragover="allowDrop(event)">
-          <h3 style="margin: 0 0 4px 0; font-size: 0.95rem; color:var(--primary);">🙋‍♂️ 대기열 (출석자)</h3>
+          <h3 style="margin: 0 0 4px 0; font-size: 0.95rem; color:var(--primary);">🙋‍♂️ 대기자</h3>
           <p style="font-size:0.75rem; color:#5c6e5e; margin-top:0; margin-bottom:8px;">
-            👆 <b>운영진 기능:</b> 이름 태그를 눌러 원하는 코트로 드래그하세요!
           </p>
           <div id="queueBox"></div>
         </div>
