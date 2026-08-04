@@ -169,8 +169,8 @@
     }
 
 /* 🙋‍♂️ 대기자 박스 & 스크롤바 설정 (수정됨) */
-    #queueBox {
-      height: 320px;                  /* 고정 높이를 주어 스크롤 영역 확립 */
+#queueBox {
+      height: 320px;                  /* 고정 높이 */
       overflow-y: scroll;             /* 항상 세로 스크롤 영역 활성화 */
       background: #f0f4ef; 
       padding: 8px; 
@@ -180,6 +180,9 @@
       flex-direction: column; 
       gap: 5px; 
       align-content: stretch;
+      
+      /* ✨ 스크롤 동작 시 드래그 엉킴 방지 */
+      touch-action: pan-y !important; 
       
       /* 모바일 터치 스크롤 최적화 */
       -webkit-overflow-scrolling: touch; 
@@ -576,29 +579,59 @@ function toggleAttendance(id) {
       renderMembers();
     }
 
+// 1. 수정 팝업 창 열기
     function editMember(id) {
-      if (!currentUser || !currentUser.isAdmin) return;
+      if (!currentUser || !currentUser.isAdmin) return alert('운영진만 수정 가능합니다.');
       const m = members.find(x => x.id === id);
       if (!m) return;
 
-      const newName = prompt('수정할 이름을 입력하세요:', m.name);
-      if (newName === null) return;
-      
-      const newLevel = prompt('수정할 급수를 입력하세요:', m.level);
-      if (newLevel === null) return;
+      document.getElementById('editMemberId').value = m.id;
+      document.getElementById('editName').value = m.name;
+      document.getElementById('editLevel').value = m.level || '초심';
+      document.getElementById('editRole').value = m.role || '정회원';
 
-      m.name = newName.trim() || m.name;
-      m.level = newLevel.trim() || m.level;
+      document.getElementById('editMemberModal').style.display = 'flex';
+    }
 
+    // 2. 수정 내용 저장하기
+    function saveEditMember() {
+      const id = Number(document.getElementById('editMemberId').value);
+      const m = members.find(x => x.id === id);
+      if (!m) return;
+
+      const newName = document.getElementById('editName').value.trim();
+      if (!newName) return alert('이름을 입력해 주세요.');
+
+      m.name = newName;
+      m.level = document.getElementById('editLevel').value;
+      m.role = document.getElementById('editRole').value;
+
+      // 대기열이나 코트에 들어가 있는 회원의 정보도 함께 갱신
       const updateQueueItem = queue.find(q => q.id === id);
-      if(updateQueueItem) {
+      if (updateQueueItem) {
         updateQueueItem.name = m.name;
         updateQueueItem.level = m.level;
+        updateQueueItem.role = m.role;
       }
-      
+
+      for (let key in courtSlots) {
+        const slotItem = courtSlots[key].find(c => c.id === id);
+        if (slotItem) {
+          slotItem.name = m.name;
+          slotItem.level = m.level;
+          slotItem.role = m.role;
+        }
+      }
+
       saveDataToDB();
       renderMembers();
       renderQueueAndCourts();
+      closeEditModal();
+    }
+
+    // 3. 수정 팝업 창 닫기
+    function closeEditModal() {
+      document.getElementById('editMemberModal').style.display = 'none';
     }
 
     function deleteMember(id) {
@@ -767,25 +800,35 @@ function formatMemberLabel(item) {
       moveMemberToZone(Number(data.itemId), data.fromZone, 'queue');
     }
 
-    /* 📱 모바일 터치 드래그 & 드롭 Engine */
+/* 📱 모바일 터치 드래그 & 드롭 Engine (스크롤 충돌 방지 보완) */
     let touchedEl = null;
     let touchClone = null;
+    let touchTimer = null; // ✨ 롱터치 딜레이 타이머 추가
 
     function touchStart(e, itemId, fromZone) {
       if (!currentUser || !currentUser.isAdmin) return;
-      touchedEl = e.currentTarget;
       
       const touch = e.touches[0];
-      touchClone = touchedEl.cloneNode(true);
-      touchClone.classList.add('dragging-touch');
-      document.body.appendChild(touchClone);
-      
-      updateClonePosition(touch);
+      const targetEl = e.currentTarget;
+
+      // 🛑 바로 드래그하지 않고 150ms 동안 꾹 누를 때만 드래그 동작 실행
+      touchTimer = setTimeout(() => {
+        touchedEl = targetEl;
+        touchClone = touchedEl.cloneNode(true);
+        touchClone.classList.add('dragging-touch');
+        document.body.appendChild(touchClone);
+        updateClonePosition(touch);
+      }, 150); 
     }
 
     function touchMove(e) {
-      if (!touchClone) return;
-      e.preventDefault(); 
+      // 150ms 이전에 손가락을 움직이면 "스크롤"로 판단하고 드래그 취소!
+      if (!touchClone) {
+        clearTimeout(touchTimer);
+        return; 
+      }
+
+      e.preventDefault(); // 드래그 중일 때만 화면 스크롤 막기
       const touch = e.touches[0];
       updateClonePosition(touch);
 
@@ -798,6 +841,9 @@ function formatMemberLabel(item) {
     }
 
     function touchEnd(e, itemId, fromZone) {
+      // 딜레이 타이머 해제
+      clearTimeout(touchTimer);
+
       if (!touchClone) return;
       
       const touch = e.changedTouches[0];
@@ -847,5 +893,43 @@ function formatMemberLabel(item) {
       saveDataToDB();
     }
   </script>
+
+<!-- 🛠️ 회원 정보 수정 모달 팝업 -->
+  <div id="editMemberModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; padding:20px;">
+    <div style="background:#fff; width:100%; max-width:320px; padding:20px; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+      <h3 style="margin-top:0; color:var(--primary); font-size:1.1rem; margin-bottom:15px;">✏️ 회원 정보 수정</h3>
+      <input type="hidden" id="editMemberId">
+      
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.8rem; font-weight:bold; color:#555;">이름</label>
+        <input type="text" id="editName" style="width:100%; padding:8px; margin-top:4px; border:1px solid var(--border); border-radius:8px;">
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.8rem; font-weight:bold; color:#555;">급수</label>
+        <select id="editLevel" style="width:100%; padding:8px; margin-top:4px; border:1px solid var(--border); border-radius:8px;">
+          <option value="초심">초심</option>
+          <option value="D조">D조</option>
+          <option value="C조">C조</option>
+          <option value="B조">B조</option>
+          <option value="A조">A조</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="font-size:0.8rem; font-weight:bold; color:#555;">구분</label>
+        <select id="editRole" style="width:100%; padding:8px; margin-top:4px; border:1px solid var(--border); border-radius:8px;">
+          <option value="정회원">정회원</option>
+          <option value="게스트">게스트</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-main" style="flex:1; padding:10px;" onclick="saveEditMember()">저장</button>
+        <button class="btn btn-danger" style="flex:1; padding:10px; background:#888;" onclick="closeEditModal()">취소</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
