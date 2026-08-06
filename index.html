@@ -111,6 +111,24 @@
     .btn-edit { background: #e09f3e; color: white; }
     .btn-disabled { background: #e5ebe4 !important; color: #9bb09e !important; cursor: not-allowed !important; }
     
+    /* 회원 현황 요약 박스 */
+    .member-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .stat-item {
+      background: var(--primary-light);
+      padding: 8px 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .stat-item .stat-title { font-size: 0.7rem; color: #556b57; margin-bottom: 2px; }
+    .stat-item .stat-count { font-size: 0.95rem; font-weight: 800; color: var(--primary); }
+
     /* Board Layout */
     .board-container { 
       display: grid;
@@ -138,6 +156,21 @@
       flex-wrap: wrap; 
       gap: 4px; 
     }
+
+    /* 타이머 스타일 */
+    .timer-badge {
+      background: #eef3ed;
+      color: #1f3a25;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+
     .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; min-height: 50px; }
     
     .draggable-item { 
@@ -156,7 +189,7 @@
       text-align: center; 
       font-weight: 700; 
       box-shadow: 0 2px 4px rgba(0,0,0,0.12);
-      touch-action: pan-y; /* 💡 세로 스크롤 허용 최적화 */
+      touch-action: pan-y;
       word-break: keep-all;
     }
     .draggable-item.dragging-touch {
@@ -168,7 +201,7 @@
       box-shadow: 0 10px 20px rgba(0,0,0,0.25) !important;
     }
 
-    /* 🙋‍♂️ 대기자 박스 - 스크롤 최적화 */
+    /* 대기자 박스 - 스크롤 최적화 */
     #queueBox {
       height: 320px;
       overflow-y: auto; 
@@ -179,13 +212,22 @@
       display: flex; 
       flex-direction: column; 
       gap: 5px; 
-      touch-action: pan-y !important; /* 💡 순수 위아래 스크롤 허용 */
+      touch-action: pan-y !important;
       -webkit-overflow-scrolling: touch; 
     }
 
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th, td { padding: 10px 4px; text-align: center; border-bottom: 1px solid var(--border-soft); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { padding: 9px 2px; text-align: center; border-bottom: 1px solid var(--border-soft); }
     th { background: var(--primary-light); color: var(--primary); font-weight: 700; }
+    
+    .attendance-badge {
+      background: #1f3a25;
+      color: #ffffff;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+    }
   </style>
 </head>
 <body>
@@ -270,7 +312,33 @@
     <!-- TAB 2: 회원 명단 -->
     <div id="memberTab" class="tab-content">
       <div class="card">
-        <h3 style="color:var(--primary); margin-top:5px; font-size:1.05rem;">📋 회원 명단 및 출석 관리</h3>
+        <h3 style="color:var(--primary); margin-top:5px; margin-bottom:10px; font-size:1.05rem;">📋 회원 명단 및 출석 관리</h3>
+        
+        <!-- 회원 현황 요약 카드 -->
+        <div class="member-stats">
+          <div class="stat-item"><div class="stat-title">전체</div><div class="stat-count" id="statTotal">0명</div></div>
+          <div class="stat-item"><div class="stat-title">정회원</div><div class="stat-count" id="statRegular">0명</div></div>
+          <div class="stat-item"><div class="stat-title">게스트</div><div class="stat-count" id="statGuest">0명</div></div>
+          <div class="stat-item" style="background:#e8f4ea;"><div class="stat-title" style="color:#2e7d32;">오늘출석</div><div class="stat-count" id="statPresent" style="color:#2e7d32;">0명</div></div>
+        </div>
+
+        <!-- 검색 & 정렬 필터 영역 -->
+        <div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+          <input type="text" id="memberSearchInput" placeholder="🔍 회원 이름으로 검색..." onkeyup="renderMembers()" style="flex:2; min-width:120px; padding:9px 12px; border:1px solid var(--border); border-radius:10px; font-size:0.85rem; outline:none; background:#fafbfa;">
+          
+          <select id="genderFilter" onchange="renderMembers()" style="flex:1; padding:9px 8px; border:1px solid var(--border); border-radius:10px; font-size:0.85rem; outline:none; background:#fafbfa; font-weight:600; color:var(--primary);">
+            <option value="all">성별 전체</option>
+            <option value="남">남성</option>
+            <option value="여">여성</option>
+          </select>
+
+          <select id="roleFilter" onchange="renderMembers()" style="flex:1; padding:9px 8px; border:1px solid var(--border); border-radius:10px; font-size:0.85rem; outline:none; background:#fafbfa; font-weight:600; color:var(--primary);">
+            <option value="all">구분 전체</option>
+            <option value="정회원">정회원</option>
+            <option value="게스트">게스트</option>
+          </select>
+        </div>
+
         <div id="adminAddMember" style="display:none; margin-bottom:15px; background:var(--primary-light); padding:12px; border-radius:12px; border:1px solid var(--border);">
           <b style="color:var(--primary); font-size:0.85rem;">[운영진] 신규 회원 등록</b>
           <div style="display:flex; gap:4px; margin-top:8px; flex-wrap:wrap;">
@@ -288,8 +356,8 @@
               <th>이름</th>
               <th>성별</th>
               <th>급수</th>
-              <th>구분</th>
-              <th>출석</th>
+              <th>누적</th>
+              <th>오늘</th>
               <th>관리</th>
             </tr>
           </thead>
@@ -307,7 +375,10 @@
           <!-- 1코트 -->
           <div class="drop-card" data-zone="c1" ondrop="dropToCourt(event, 'c1')" ondragover="allowDrop(event)">
             <div class="drop-title">
-              <span>🏟️ 1코트</span>
+              <span style="display:flex; align-items:center; gap:6px;">
+                🏟️ 1코트
+                <span id="timer-c1" class="timer-badge">⏱️ 00:00</span>
+              </span>
               <span id="btnC1Win" class="admin-only" style="display:none;">
                 <button class="btn btn-danger" style="font-size:0.6rem; padding:2px 5px;" onclick="finishGame('c1')">종료</button>
               </span>
@@ -318,7 +389,10 @@
           <!-- 2코트 -->
           <div class="drop-card" data-zone="c2" ondrop="dropToCourt(event, 'c2')" ondragover="allowDrop(event)">
             <div class="drop-title">
-              <span>🏟️ 2코트</span>
+              <span style="display:flex; align-items:center; gap:6px;">
+                🏟️ 2코트
+                <span id="timer-c2" class="timer-badge">⏱️ 00:00</span>
+              </span>
               <span id="btnC2Win" class="admin-only" style="display:none;">
                 <button class="btn btn-danger" style="font-size:0.6rem; padding:2px 5px;" onclick="finishGame('c2')">종료</button>
               </span>
@@ -385,6 +459,10 @@
     let members = [];
     let queue = [];
     let courtSlots = { c1: [], c2: [], w1: [], w2: [] };
+    
+    // ⏱️ 코트 타이머 관련 데이터
+    let courtStartTimes = { c1: null, c2: null };
+    let timerInterval = null;
 
     // 🕛 자정 리셋 로직
     function getTodayString() {
@@ -415,6 +493,7 @@
       if (isChanged || queue.length > 0 || courtSlots.c1.length > 0 || courtSlots.c2.length > 0 || courtSlots.w1.length > 0 || courtSlots.w2.length > 0) {
         queue = [];
         courtSlots = { c1: [], c2: [], w1: [], w2: [] };
+        courtStartTimes = { c1: null, c2: null };
         saveDataToDB();
         renderMembers();
         renderQueueAndCourts();
@@ -424,14 +503,17 @@
     setInterval(checkMidnightReset, 60000);
 
     function saveDataToDB() {
-      if(db) db.ref('badmintonData').set({ members, queue, courtSlots });
+      if(db) db.ref('badmintonData').set({ members, queue, courtSlots, courtStartTimes });
     }
 
     if(db) {
       db.ref('badmintonData').on('value', (snapshot) => {
         const data = snapshot.val();
         if(data) {
-          members = data.members || [];
+          members = (data.members || []).map(m => ({
+            ...m,
+            attendanceCount: m.attendanceCount || 0
+          }));
           queue = data.queue || [];
           
           const fetchedSlots = data.courtSlots || {};
@@ -441,6 +523,12 @@
             w1: fetchedSlots.w1 || [],
             w2: fetchedSlots.w2 || []
           };
+
+          const fetchedTimes = data.courtStartTimes || {};
+          courtStartTimes = {
+            c1: fetchedTimes.c1 || null,
+            c2: fetchedTimes.c2 || null
+          };
           
           checkMidnightReset();
 
@@ -449,6 +537,38 @@
         }
       });
     }
+
+    // ⏱️ 실시간 타이머 작동 함수 (4명이 찬 경우만 작동)
+    function startTimerLoop() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(updateTimersUI, 1000);
+    }
+
+    function updateTimersUI() {
+      ['c1', 'c2'].forEach(courtKey => {
+        const timerEl = document.getElementById(`timer-${courtKey}`);
+        if (!timerEl) return;
+
+        const currentSlots = courtSlots[courtKey] || [];
+        const startTime = courtStartTimes[courtKey];
+
+        // 💡 4명이 완전히 채워진 경우에만 타이머 동작
+        if (currentSlots.length === 4 && startTime) {
+          const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+          const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+          const secs = String(elapsedSec % 60).padStart(2, '0');
+          timerEl.innerText = `⏱️ ${mins}:${secs}`;
+          timerEl.style.background = '#eef3ed';
+          timerEl.style.color = '#1f3a25';
+        } else {
+          timerEl.innerText = `⏱️ 4명 대기중`;
+          timerEl.style.background = '#f0f0f0';
+          timerEl.style.color = '#888888';
+        }
+      });
+    }
+
+    startTimerLoop();
 
     function enterAppWithLogin() {
       const id = document.getElementById('landingId').value.trim();
@@ -523,13 +643,18 @@
 
       m.isPresent = !m.isPresent;
       if (m.isPresent) {
+        m.attendanceCount = (m.attendanceCount || 0) + 1;
         if (!queue.some(item => item.id === m.id)) {
           queue.push({ id: m.id, name: m.name, gender: m.gender, level: m.level, role: m.role || '정회원' });
         }
       } else {
+        m.attendanceCount = Math.max(0, (m.attendanceCount || 0) - 1);
         queue = queue.filter(item => item.id !== m.id);
         for (let key in courtSlots) {
           courtSlots[key] = courtSlots[key].filter(item => item.id !== m.id);
+          if ((key === 'c1' || key === 'c2') && courtSlots[key].length < 4) {
+            courtStartTimes[key] = null;
+          }
         }
       }
       saveDataToDB();
@@ -544,7 +669,7 @@
       const role = document.getElementById('newRole').value;
       if (!name) return alert('이름을 입력하세요.');
 
-      members.push({ id: Date.now(), name, gender, level, role, isPresent: false });
+      members.push({ id: Date.now(), name, gender, level, role, isPresent: false, attendanceCount: 0 });
       document.getElementById('newName').value = '';
       saveDataToDB();
       renderMembers();
@@ -559,6 +684,7 @@
       document.getElementById('editName').value = m.name;
       document.getElementById('editLevel').value = m.level || '초심';
       document.getElementById('editRole').value = m.role || '정회원';
+      document.getElementById('editAttendanceCount').value = m.attendanceCount || 0;
 
       document.getElementById('editMemberModal').style.display = 'flex';
     }
@@ -574,6 +700,7 @@
       m.name = newName;
       m.level = document.getElementById('editLevel').value;
       m.role = document.getElementById('editRole').value;
+      m.attendanceCount = parseInt(document.getElementById('editAttendanceCount').value, 10) || 0;
 
       const updateQueueItem = queue.find(q => q.id === id);
       if (updateQueueItem) {
@@ -611,6 +738,9 @@
         queue = queue.filter(x => x.id !== id);
         for (let key in courtSlots) {
           courtSlots[key] = courtSlots[key].filter(x => x.id !== id);
+          if ((key === 'c1' || key === 'c2') && courtSlots[key].length < 4) {
+            courtStartTimes[key] = null;
+          }
         }
         saveDataToDB();
         renderMembers();
@@ -634,6 +764,16 @@
             courtSlots[toZone] = [];
           }
           courtSlots[toZone].push(item);
+
+          // ⏱️ 4명이 완전히 찼을 때만 타이머 시작
+          if ((toZone === 'c1' || toZone === 'c2') && courtSlots[toZone].length === 4) {
+            courtStartTimes[toZone] = Date.now();
+          }
+        }
+
+        // ⏱️ 출발한 코트의 인원이 4명 미만으로 떨어지면 타이머 리셋
+        if ((fromZone === 'c1' || fromZone === 'c2') && courtSlots[fromZone].length < 4) {
+          courtStartTimes[fromZone] = null;
         }
         
         renderQueueAndCourts();
@@ -655,6 +795,13 @@
 
       courtSlots[targetCourtKey] = [...sourceList];
       courtSlots[fromMatchKey] = [];
+      
+      // ⏱️ 4명이 채워져 넘어온 경우 타이머 시작
+      if (courtSlots[targetCourtKey].length === 4) {
+        courtStartTimes[targetCourtKey] = Date.now();
+      } else {
+        courtStartTimes[targetCourtKey] = null;
+      }
 
       renderQueueAndCourts();
       saveDataToDB();
@@ -663,12 +810,48 @@
     function renderMembers() {
       const isAdmin = currentUser && currentUser.isAdmin;
       const tbody = document.getElementById('memberTableBody');
-      tbody.innerHTML = members.map(m => `
+      const searchInput = document.getElementById('memberSearchInput');
+      const genderFilter = document.getElementById('genderFilter') ? document.getElementById('genderFilter').value : 'all';
+      const roleFilter = document.getElementById('roleFilter') ? document.getElementById('roleFilter').value : 'all';
+      const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+      const totalCount = members.length;
+      const regularCount = members.filter(m => (m.role || '정회원') === '정회원').length;
+      const guestCount = members.filter(m => m.role === '게스트').length;
+      const presentCount = members.filter(m => m.isPresent).length;
+
+      document.getElementById('statTotal').innerText = `${totalCount}명`;
+      document.getElementById('statRegular').innerText = `${regularCount}명`;
+      document.getElementById('statGuest').innerText = `${guestCount}명`;
+      document.getElementById('statPresent').innerText = `${presentCount}명`;
+
+      let sortedMembers = [...members].sort((a, b) => {
+        const countA = a.attendanceCount || 0;
+        const countB = b.attendanceCount || 0;
+        if (countB !== countA) {
+          return countB - countA;
+        }
+        return a.name.localeCompare(b.name, 'ko');
+      });
+
+      const filteredMembers = sortedMembers.filter(m => {
+        const matchName = m.name.toLowerCase().includes(keyword);
+        const matchGender = (genderFilter === 'all') || (m.gender === genderFilter);
+        const matchRole = (roleFilter === 'all') || ((m.role || '정회원') === roleFilter);
+        return matchName && matchGender && matchRole;
+      });
+
+      if (filteredMembers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; color:#888;">조건에 일치하는 회원이 없습니다.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filteredMembers.map(m => `
         <tr>
           <td><b>${m.name}</b></td>
           <td>${m.gender}</td>
           <td>${m.level}</td>
-          <td><span style="font-size:0.75rem; padding:2px 6px; border-radius:10px; background:${m.role === '게스트' ? '#fff3cd' : '#e2e3e5'}; color:${m.role === '게스트' ? '#856404' : '#383d41'}; font-weight:bold;">${m.role || '정회원'}</span></td>
+          <td><span class="attendance-badge">${m.attendanceCount || 0}회</span></td>
           <td>
             <span style="cursor:pointer;" onclick="${isAdmin ? `toggleAttendance(${m.id})` : ''}">
               ${m.isPresent ? '🟢' : '🔴'}
@@ -691,11 +874,10 @@
       return `${item.name} (${roleTag}${item.level})`;
     }
 
-function renderQueueAndCourts() {
+    function renderQueueAndCourts() {
       const queueBox = document.getElementById('queueBox');
       const isAdmin = currentUser && currentUser.isAdmin;
       
-      // 1. 대기자 목록 렌더링
       queueBox.innerHTML = queue.map(item => `
         <div class="draggable-item" 
              ${isAdmin ? `
@@ -712,12 +894,17 @@ function renderQueueAndCourts() {
         </div>
       `).join('') || '<span style="color:#788c7b; font-size:0.8rem; width:100%; text-align:center; padding:15px 0;">출석 처리된 회원이 없습니다.</span>';
 
-      // 2. 코트 및 대기매치 렌더링 (비로그인 유저에게도 완벽히 보이도록 수정)
       for (let key in courtSlots) {
         const slotEl = document.getElementById(`slot-${key}`);
         if (!slotEl) continue;
 
         const list = courtSlots[key] || [];
+
+        // 진행중인 코트만 종료 버튼 활성화
+        if (key === 'c1' || key === 'c2') {
+          const btnWin = document.getElementById(`btn${key.toUpperCase()}Win`);
+          if (btnWin) btnWin.style.display = (isAdmin && list.length > 0) ? 'inline' : 'none';
+        }
         
         slotEl.innerHTML = [0, 1, 2, 3].map(idx => {
           const item = list[idx];
@@ -742,6 +929,8 @@ function renderQueueAndCourts() {
           }
         }).join('');
       }
+
+      updateTimersUI();
     }
 
     /* 🖥️ PC 드래그 & 드롭 Engine */
@@ -771,7 +960,7 @@ function renderQueueAndCourts() {
       moveMemberToZone(Number(data.itemId), data.fromZone, 'queue');
     }
 
-    /* 📱 모바일 터치 & 스크롤 완벽 구분 터치 엔진 */
+    /* 📱 모바일 터치 Engine */
     let touchedEl = null;
     let touchClone = null;
     let startX = 0;
@@ -797,14 +986,12 @@ function renderQueueAndCourts() {
       const moveY = Math.abs(touch.clientY - startY);
 
       if (!isDragging) {
-        // 💡 위아래 단순 스크롤시 터치드래그 판정을 하지 않고 즉시 빠져나가 부드러운 스크롤 보장
         if (moveY > 8 && moveY > moveX) {
           touchedEl = null;
           isDragging = false;
           return;
         }
         
-        // 옆으로 끌거나 일정 거리 이상 꾹 누르며 이동 시 드래그 모드 발동
         if (moveX > 10 || moveY > 10) {
           isDragging = true;
           touchClone = touchedEl.cloneNode(true);
@@ -874,6 +1061,12 @@ function renderQueueAndCourts() {
       if (!courtSlots[courtKey] || courtSlots[courtKey].length === 0) return;
       courtSlots[courtKey].forEach(item => queue.push(item));
       courtSlots[courtKey] = [];
+      
+      // ⏱️ 게임 종료 시 타이머 초기화
+      if (courtKey === 'c1' || courtKey === 'c2') {
+        courtStartTimes[courtKey] = null;
+      }
+
       renderQueueAndCourts();
       saveDataToDB();
     }
@@ -901,12 +1094,17 @@ function renderQueueAndCourts() {
         </select>
       </div>
 
-      <div style="margin-bottom:18px;">
+      <div style="margin-bottom:10px;">
         <label style="font-size:0.8rem; font-weight:bold; color:#555;">구분</label>
         <select id="editRole" style="width:100%; padding:8px; margin-top:4px; border:1px solid var(--border); border-radius:8px;">
           <option value="정회원">정회원</option>
           <option value="게스트">게스트</option>
         </select>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="font-size:0.8rem; font-weight:bold; color:#555;">누적 출석 횟수</label>
+        <input type="number" id="editAttendanceCount" min="0" style="width:100%; padding:8px; margin-top:4px; border:1px solid var(--border); border-radius:8px;">
       </div>
 
       <div style="display:flex; gap:8px;">
