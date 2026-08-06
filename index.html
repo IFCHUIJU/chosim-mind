@@ -216,17 +216,25 @@
       -webkit-overflow-scrolling: touch; 
     }
 
-    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    th, td { padding: 9px 2px; text-align: center; border-bottom: 1px solid var(--border-soft); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { padding: 8px 2px; text-align: center; border-bottom: 1px solid var(--border-soft); }
     th { background: var(--primary-light); color: var(--primary); font-weight: 700; }
     
     .attendance-badge {
       background: #1f3a25;
       color: #ffffff;
       font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-size: 0.75rem;
+      padding: 2px 5px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+    }
+    .monthly-badge {
+      background: #4a7c59;
+      color: #ffffff;
+      font-weight: 800;
+      padding: 2px 5px;
+      border-radius: 8px;
+      font-size: 0.72rem;
     }
   </style>
 </head>
@@ -357,6 +365,7 @@
               <th>성별</th>
               <th>급수</th>
               <th>누적</th>
+              <th>당월</th>
               <th>오늘</th>
               <th>관리</th>
             </tr>
@@ -464,16 +473,34 @@
     let courtStartTimes = { c1: null, c2: null };
     let timerInterval = null;
 
-    // 🕛 자정 리셋 로직
+    // 🕛 날짜 및 리셋 확인 로직
     function getTodayString() {
       const now = new Date();
       return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
     }
 
-    function checkMidnightReset() {
-      const today = getTodayString();
-      const lastResetDate = localStorage.getItem('lastResetDate');
+    function getCurrentMonthString() {
+      const now = new Date();
+      return `${now.getFullYear()}-${now.getMonth() + 1}`;
+    }
 
+    function checkResetConditions() {
+      const today = getTodayString();
+      const currentMonth = getCurrentMonthString();
+      
+      const lastResetDate = localStorage.getItem('lastResetDate');
+      const lastResetMonth = localStorage.getItem('lastResetMonth');
+
+      // 1. 매월 1일/월 변경 시 당월 출석 수치 0으로 리셋
+      if (lastResetMonth !== currentMonth) {
+        members.forEach(m => {
+          m.monthlyAttendanceCount = 0;
+        });
+        localStorage.setItem('lastResetMonth', currentMonth);
+        saveDataToDB();
+      }
+
+      // 2. 자정 변경 시 오늘 출석 처리 리셋
       if (lastResetDate !== today) {
         resetAllAttendance();
         localStorage.setItem('lastResetDate', today);
@@ -500,7 +527,7 @@
       }
     }
 
-    setInterval(checkMidnightReset, 60000);
+    setInterval(checkResetConditions, 60000);
 
     function saveDataToDB() {
       if(db) db.ref('badmintonData').set({ members, queue, courtSlots, courtStartTimes });
@@ -512,7 +539,8 @@
         if(data) {
           members = (data.members || []).map(m => ({
             ...m,
-            attendanceCount: m.attendanceCount || 0
+            attendanceCount: m.attendanceCount || 0,
+            monthlyAttendanceCount: m.monthlyAttendanceCount || 0
           }));
           queue = data.queue || [];
           
@@ -530,7 +558,7 @@
             c2: fetchedTimes.c2 || null
           };
           
-          checkMidnightReset();
+          checkResetConditions();
 
           renderMembers();
           renderQueueAndCourts();
@@ -644,11 +672,13 @@
       m.isPresent = !m.isPresent;
       if (m.isPresent) {
         m.attendanceCount = (m.attendanceCount || 0) + 1;
+        m.monthlyAttendanceCount = (m.monthlyAttendanceCount || 0) + 1;
         if (!queue.some(item => item.id === m.id)) {
           queue.push({ id: m.id, name: m.name, gender: m.gender, level: m.level, role: m.role || '정회원' });
         }
       } else {
         m.attendanceCount = Math.max(0, (m.attendanceCount || 0) - 1);
+        m.monthlyAttendanceCount = Math.max(0, (m.monthlyAttendanceCount || 0) - 1);
         queue = queue.filter(item => item.id !== m.id);
         for (let key in courtSlots) {
           courtSlots[key] = courtSlots[key].filter(item => item.id !== m.id);
@@ -669,7 +699,7 @@
       const role = document.getElementById('newRole').value;
       if (!name) return alert('이름을 입력하세요.');
 
-      members.push({ id: Date.now(), name, gender, level, role, isPresent: false, attendanceCount: 0 });
+      members.push({ id: Date.now(), name, gender, level, role, isPresent: false, attendanceCount: 0, monthlyAttendanceCount: 0 });
       document.getElementById('newName').value = '';
       saveDataToDB();
       renderMembers();
@@ -685,6 +715,7 @@
       document.getElementById('editLevel').value = m.level || '초심';
       document.getElementById('editRole').value = m.role || '정회원';
       document.getElementById('editAttendanceCount').value = m.attendanceCount || 0;
+      document.getElementById('editMonthlyAttendanceCount').value = m.monthlyAttendanceCount || 0;
 
       document.getElementById('editMemberModal').style.display = 'flex';
     }
@@ -701,6 +732,7 @@
       m.level = document.getElementById('editLevel').value;
       m.role = document.getElementById('editRole').value;
       m.attendanceCount = parseInt(document.getElementById('editAttendanceCount').value, 10) || 0;
+      m.monthlyAttendanceCount = parseInt(document.getElementById('editMonthlyAttendanceCount').value, 10) || 0;
 
       const updateQueueItem = queue.find(q => q.id === id);
       if (updateQueueItem) {
@@ -842,7 +874,7 @@
       });
 
       if (filteredMembers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; color:#888;">조건에 일치하는 회원이 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="padding:20px; color:#888;">조건에 일치하는 회원이 없습니다.</td></tr>`;
         return;
       }
 
@@ -852,6 +884,7 @@
           <td>${m.gender}</td>
           <td>${m.level}</td>
           <td><span class="attendance-badge">${m.attendanceCount || 0}회</span></td>
+          <td><span class="monthly-badge">${m.monthlyAttendanceCount || 0}회</span></td>
           <td>
             <span style="cursor:pointer;" onclick="${isAdmin ? `toggleAttendance(${m.id})` : ''}">
               ${m.isPresent ? '🟢' : '🔴'}
@@ -1102,9 +1135,14 @@
         </select>
       </div>
 
-      <div style="margin-bottom:18px;">
+      <div style="margin-bottom:10px;">
         <label style="font-size:0.8rem; font-weight:bold; color:#555;">누적 출석 횟수</label>
         <input type="number" id="editAttendanceCount" min="0" style="width:100%; padding:8px; margin-top:4px; border:1px solid var(--border); border-radius:8px;">
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="font-size:0.8rem; font-weight:bold; color:#555;">당월 출석 횟수</label>
+        <input type="number" id="editMonthlyAttendanceCount" min="0" style="width:100%; padding:8px; margin-top:4px; border:1px solid var(--border); border-radius:8px;">
       </div>
 
       <div style="display:flex; gap:8px;">
